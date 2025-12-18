@@ -1,0 +1,638 @@
+{
+  "_schema_relationships": {
+    "routes": "origin_id and destination_id are Foreign Keys (FK) referencing cities.id",
+    "areas": "city_id is FK referencing cities.id",
+    "trips": "route_id is FK referencing routes.route_id, bus_id is FK referencing buses.bus_id",
+    "bookings": "user_id is FK referencing users.user_id, trip_id is FK referencing trips.trip_id"
+  },
+  "cities": [
+    {
+      "id": "LOC_AMN",
+      "name_en": "Amman (Capital)",
+      "name_ar": "عمان (العاصمة)"
+    },
+    {
+      "id": "LOC_IRD",
+      "name_en": "Irbid (North)",
+      "name_ar": "إربد (الشمال)"
+    },
+    {
+      "id": "LOC_ZAR",
+      "name_en": "Zarqa",
+      "name_ar": "الزرقاء"
+    },
+    {
+      "id": "LOC_KAR",
+      "name_en": "Karak",
+      "name_ar": "الكرك"
+    },
+    {
+      "id": "LOC_AQB",
+      "name_en": "Aqaba (Red Sea)",
+      "name_ar": "العقبة (البحر الأحمر)"
+    },
+    {
+      "id": "LOC_MAA",
+      "name_en": "Ma'an",
+      "name_ar": "معان"
+    },
+    {
+      "id": "LOC_JRA",
+      "name_en": "Jerash",
+      "name_ar": "جرش"
+    },
+    {
+      "id": "LOC_AJL",
+      "name_en": "Ajloun",
+      "name_ar": "عجلون"
+    },
+    {
+      "id": "LOC_MAD",
+      "name_en": "Madaba",
+      "name_ar": "مادبا"
+    },
+    {
+      "id": "LOC_BAL",
+      "name_en": "Balqa (Salt)",
+      "name_ar": "البلقاء (السلط)"
+    },
+    {
+      "id": "LOC_MAF",
+      "name_en": "Mafraq",
+      "name_ar": "المفرق"
+    },
+    {
+      "id": "LOC_TFL",
+      "name_en": "Tafilah",
+      "name_ar": "الطفيلة"
+    }
+  ],
+  "areas": [
+    {
+      "id": "AREA_AMN_1",
+      "city_id": "LOC_AMN",
+      "name_en": "Tabarbour",
+      "station_name": "Tabarbour Bus Station (North)",
+      "street_en": "Al Urdun Street / Tariq Jordan Street",
+       "lat": 31.99473,
+       "lng": 35.91970
+    },
+    {
+      "id": "AREA_AMN_2",
+      "city_id": "LOC_AMN",
+      "name_en": "Abdali",
+      "station_name": "Abdali Bus Station",
+      "street_en": "King Hussein Street (near Abdali area)"
+    },
+    {
+      "id": "AREA_AMN_3",
+      "city_id": "LOC_AMN",
+      "name_en": "Wahdat",
+      "station_name": "Wahdat Bus Station (South)",
+      "street_en": "Near Al-Quds Street / South Amman area"
+    },
+    {
+      "id": "AREA_IRD_1",
+      "city_id": "LOC_IRD",
+      "name_en": "North",
+      "station_name": "North Irbid Bus Station",
+      "street_en": "Near Baghdad Street (main northern route)",
+      "lat": 32.53513,
+      "lng": 35.86970
+    },
+    {
+      "id": "AREA_IRD_2",
+      "city_id": "LOC_IRD",
+      "name_en": "South",
+      "station_name": "South Irbid Bus Station",
+      "street_en": "Near University Street"
+    },
+    {
+      "id": "AREA_IRD_3",
+      "city_id": "LOC_IRD",
+      "name_en": "Central",
+      "station_name": "Central Irbid Bus Terminal",
+      "street_en": "Near Al-Hashimi Street (city center)"
+    },
+    {
+      "id": "AREA_ZAR_1",
+      "city_id": "LOC_ZAR",
+      "name_en": "New Zarqa",
+      "station_name": "New Zarqa Bus Complex",
+      "street_en": "Near Zarqa Highway / New Zarqa area",
+      "lat": 32.09963,
+      "lng": 36.19006
+    },
+    {
+      "id": "AREA_ZAR_2",
+      "city_id": "LOC_ZAR",
+      "name_en": "Central",
+      "station_name": "Central Zarqa Bus Station",
+      "street_en": "Near King Abdullah Street"
+    },
+    {
+      "id": "AREA_ZAR_3",
+      "city_id": "LOC_ZAR",
+      "name_en": "BRT",
+      "station_name": "Zarqa BRT Terminal",
+      "street_en": "Along Amman-Zarqa BRT corridor (Shaheed Road)"
+    },
+    {
+      "id": "AREA_KAR_1",
+      "city_id": "LOC_KAR",
+      "name_en": "Main",
+      "station_name": "Main Karak Bus Station",
+      "street_en": "Near King's Highway"
+    },
+    {
+      "id": "AREA_KAR_2",
+      "city_id": "LOC_KAR",
+      "name_en": "Castle",
+      "station_name": "Karak Castle Bus Stop",
+      "street_en": "Near Karak Castle entrance road"
+    },
+    {
+      "id": "AREA_KAR_3",
+      "city_id": "LOC_KAR",
+      "name_en": "South",
+      "station_name": "South Karak Bus Terminal",
+      "street_en": "Near southern exit on Desert Highway"
+    },
+    {
+      "id": "AREA_AQB_1",
+      "city_id": "LOC_AQB",
+      "name_en": "Central",
+      "station_name": "Central Aqaba Bus Station",
+      "street_en": "Near King Talal Street"
+    },
+    {
+      "id": "AREA_AQB_2",
+      "city_id": "LOC_AQB",
+      "name_en": "JETT",
+      "station_name": "JETT Aqaba Station",
+      "street_en": "Near Al-Rashid Street (JETT main building)"
+    },
+    {
+      "id": "AREA_AQB_3",
+      "city_id": "LOC_AQB",
+      "name_en": "North",
+      "station_name": "North Aqaba Bus Terminal",
+      "street_en": "Near Aqaba North Beach road"
+    },
+    {
+      "id": "AREA_MAA_1",
+      "city_id": "LOC_MAA",
+      "name_en": "Main",
+      "station_name": "Main Ma'an Bus Station",
+      "street_en": "Near Desert Highway",
+       "lat": 30.1950,
+      "lng": 35.7341
+    },
+    {
+      "id": "AREA_MAA_2",
+      "city_id": "LOC_MAA",
+      "name_en": "Central",
+      "station_name": "Central Ma'an Terminal",
+      "street_en": "Near Al-Hussein Bin Ali Street"
+    },
+    {
+      "id": "AREA_MAA_3",
+      "city_id": "LOC_MAA",
+      "name_en": "Petra",
+      "station_name": "Ma'an to Petra Bus Stop",
+      "street_en": "Along Petra road (Wadi Musa route)"
+    },
+    {
+      "id": "AREA_JRA_1",
+      "city_id": "LOC_JRA",
+      "name_en": "Main",
+      "station_name": "Main Jerash Bus Station",
+      "street_en": "Near Jerash Archaeological Site entrance"
+    },
+    {
+      "id": "AREA_JRA_2",
+      "city_id": "LOC_JRA",
+      "name_en": "Visitor Center",
+      "station_name": "Jerash Visitor Center Bus Stop",
+      "street_en": "Near Roman Ruins Visitor Center"
+    },
+    {
+      "id": "AREA_JRA_3",
+      "city_id": "LOC_JRA",
+      "name_en": "South",
+      "station_name": "South Jerash Bus Terminal",
+      "street_en": "Near southern approach road"
+    },
+    {
+      "id": "AREA_AJL_1",
+      "city_id": "LOC_AJL",
+      "name_en": "Castle",
+      "station_name": "Ajloun Castle Bus Stop",
+      "street_en": "Near Ajloun Castle road"
+    },
+    {
+      "id": "AREA_AJL_2",
+      "city_id": "LOC_AJL",
+      "name_en": "Central",
+      "station_name": "Central Ajloun Bus Station",
+      "street_en": "Near Prince Hassan Street"
+    },
+    {
+      "id": "AREA_AJL_3",
+      "city_id": "LOC_AJL",
+      "name_en": "North",
+      "station_name": "North Ajloun Terminal",
+      "street_en": "Near northern forest reserve road"
+    },
+    {
+      "id": "AREA_MAD_1",
+      "city_id": "LOC_MAD",
+      "name_en": "Main",
+      "station_name": "Main Madaba Bus Station",
+      "street_en": "Near King's Highway",
+       "lat": 31.7160,
+       "lng": 35.7940
+    },
+    {
+      "id": "AREA_MAD_2",
+      "city_id": "LOC_MAD",
+      "name_en": "Central",
+      "station_name": "Central Madaba Terminal",
+      "street_en": "Near Map Church area"
+    },
+    {
+      "id": "AREA_MAD_3",
+      "city_id": "LOC_MAD",
+      "name_en": "Kings Highway",
+      "station_name": "Madaba King's Highway Stop",
+      "street_en": "Along King's Highway"
+    },
+    {
+      "id": "AREA_BAL_1",
+      "city_id": "LOC_BAL",
+      "name_en": "Main",
+      "station_name": "Main Salt Bus Station",
+      "street_en": "Near Al-Salt main road"
+    },
+    {
+      "id": "AREA_BAL_2",
+      "city_id": "LOC_BAL",
+      "name_en": "Central",
+      "station_name": "Central Salt Terminal",
+      "street_en": "Near Hammam Street (historic area)"
+    },
+    {
+      "id": "AREA_BAL_3",
+      "city_id": "LOC_BAL",
+      "name_en": "New",
+      "station_name": "New Salt Bus Complex",
+      "street_en": "Near new development area"
+    },
+    {
+      "id": "AREA_MAF_1",
+      "city_id": "LOC_MAF",
+      "name_en": "Main",
+      "station_name": "Main Mafraq Bus Station",
+      "street_en": "Near Omar Ibn Al-Khattab Street"
+    },
+    {
+      "id": "AREA_MAF_2",
+      "city_id": "LOC_MAF",
+      "name_en": "Central",
+      "station_name": "Central Mafraq Terminal",
+      "street_en": "City center area"
+    },
+    {
+      "id": "AREA_MAF_3",
+      "city_id": "LOC_MAF",
+      "name_en": "North",
+      "station_name": "North Mafraq Bus Stop",
+      "street_en": "Near northern highway"
+    },
+    {
+      "id": "AREA_TFL_1",
+      "city_id": "LOC_TFL",
+      "name_en": "Main",
+      "station_name": "Main Tafilah Bus Station",
+      "street_en": "Near King's Highway"
+    },
+    {
+      "id": "AREA_TFL_2",
+      "city_id": "LOC_TFL",
+      "name_en": "Central",
+      "station_name": "Central Tafilah Terminal",
+      "street_en": "Near Al-Hussein Street"
+    },
+    {
+      "id": "AREA_TFL_3",
+      "city_id": "LOC_TFL",
+      "name_en": "Dana",
+      "station_name": "Tafilah to Dana Bus Stop",
+      "street_en": "Along Dana Nature Reserve road"
+    }
+  ],
+  "routes": [
+    {
+      "route_id": "R101",
+      "origin_id": "LOC_AMN",
+      "destination_id": "LOC_IRD",
+      "distance_km": 88,
+      "duration_hrs": 1.45,
+      "base_price_JOD": 3.5
+    },
+    {
+      "route_id": "R102",
+      "origin_id": "LOC_AMN",
+      "destination_id": "LOC_ZAR",
+      "distance_km": 25,
+      "duration_hrs": 0.5,
+      "base_price_JOD": 1.0
+    },
+    {
+      "route_id": "R103",
+      "origin_id": "LOC_AMN",
+      "destination_id": "LOC_MAD",
+      "distance_km": 30,
+      "duration_hrs": 0.75,
+      "base_price_JOD": 1.5
+    },
+    {
+      "route_id": "R104",
+      "origin_id": "LOC_IRD",
+      "destination_id": "LOC_AJL",
+      "distance_km": 35,
+      "duration_hrs": 1.0,
+      "base_price_JOD": 1.75
+    },
+    {
+      "route_id": "R105",
+      "origin_id": "LOC_AMN",
+      "destination_id": "LOC_KAR",
+      "distance_km": 140,
+      "duration_hrs": 2.5,
+      "base_price_JOD": 4.5
+    },
+    {
+      "route_id": "R106",
+      "origin_id": "LOC_MAA",
+      "destination_id": "LOC_TFL",
+      "distance_km": 90,
+      "duration_hrs": 1.5,
+      "base_price_JOD": 3.0
+    },
+    {
+      "route_id": "R107",
+      "origin_id": "LOC_ZAR",
+      "destination_id": "LOC_MAF",
+      "distance_km": 60,
+      "duration_hrs": 1.0,
+      "base_price_JOD": 2.25
+    },
+    {
+      "route_id": "R108",
+      "origin_id": "LOC_MAD",
+      "destination_id": "LOC_BAL",
+      "distance_km": 45,
+      "duration_hrs": 1.0,
+      "base_price_JOD": 2.0
+    }
+  ],
+  "buses": [
+    {
+      "bus_id": "B2001",
+      "operator": "Jordan Local",
+      "type": "Minibus (Service)",
+      "capacity": 20,
+      "model": "Daewoo BS090",
+      "model_year": 2018,
+      "driver_name": "Saad Salman",
+      "rating": 2.3,
+      "features": ["A/C"]
+    },
+    {
+      "bus_id": "B2002",
+      "operator": "Intercity Express",
+      "type": "Standard Coach",
+      "capacity": 50,
+      "model": "Mercedes O500R",
+      "model_year": 2020,
+      "driver_name": "Omar Jaber",
+      "rating": 3.7,
+      "features": ["A/C", "Reclining Seats", "WC"]
+    },
+    {
+      "bus_id": "B2003",
+      "operator": "JETT Budget",
+      "type": "Express Service",
+      "capacity": 35,
+      "model": "Volvo B7R (ELBA)",
+      "model_year": 2023,
+      "driver_name": "Ahmad Ali",
+      "rating": 4.0,
+      "features": ["A/C", "USB Charge", "WiFi", "WC"]
+    },
+    {
+      "bus_id": "B2004",
+      "operator": "Alpha Line",
+      "type": "Premium Coach",
+      "capacity": 40,
+      "model": "MAN Lion's Coach",
+      "model_year": 2024,
+      "driver_name": "Raed Himmo",
+      "rating": 4.9,
+      "features": ["A/C", "WC", "WiFi", "USB Charge", "Reclining Seats", "TV"]
+    }
+  ],
+  "trips": [
+    {
+      "trip_id": "T20251216-101-A",
+      "route_id": "R101",
+      "bus_id": "B2002",
+      "departure_date": "2025-12-16",
+      "departure_time": "06:30",
+      "available_seats": 45,
+      "price_JOD": 3.65,
+      "status": "Scheduled"
+    },
+    {
+      "trip_id": "T20251216-101-B",
+      "route_id": "R101",
+      "bus_id": "B2003",
+      "departure_date": "2025-12-16",
+      "departure_time": "08:00",
+      "available_seats": 5,
+      "price_JOD": 4.2,
+      "status": "Almost Full"
+    },
+    {
+      "trip_id": "T20251216-102-M",
+      "route_id": "R102",
+      "bus_id": "B2001",
+      "departure_date": "2025-12-16",
+      "departure_time": "07:00",
+      "available_seats": 10,
+      "price_JOD": 1.0,
+      "status": "Scheduled"
+    },
+    {
+      "trip_id": "T20251216-105-E",
+      "route_id": "R105",
+      "bus_id": "B2004",
+      "departure_date": "2025-12-16",
+      "departure_time": "14:00",
+      "available_seats": 30,
+      "price_JOD": 5.0,
+      "status": "Express"
+    },
+    {
+      "trip_id": "T20251217-103-M",
+      "route_id": "R103",
+      "bus_id": "B2002",
+      "departure_date": "2025-12-17",
+      "departure_time": "11:00",
+      "available_seats": 50,
+      "price_JOD": 1.6,
+      "status": "Scheduled"
+    },
+    {
+      "trip_id": "T20251217-108-A",
+      "route_id": "R108",
+      "bus_id": "B2001",
+      "departure_date": "2025-12-17",
+      "departure_time": "13:30",
+      "available_seats": 15,
+      "price_JOD": 2.1,
+      "status": "Scheduled"
+    },
+    {
+      "trip_id": "T20251217-104-M",
+      "route_id": "R104",
+      "bus_id": "B2003",
+      "departure_date": "2025-12-17",
+      "departure_time": "16:00",
+      "available_seats": 35,
+      "price_JOD": 2.15,
+      "status": "Scheduled"
+    },
+    {
+      "trip_id": "T20251218-106-A",
+      "route_id": "R106",
+      "bus_id": "B2001",
+      "departure_date": "2025-12-18",
+      "departure_time": "09:00",
+      "available_seats": 18,
+      "price_JOD": 3.0,
+      "status": "Scheduled"
+    },
+    {
+      "trip_id": "T20251218-107-B",
+      "route_id": "R107",
+      "bus_id": "B2002",
+      "departure_date": "2025-12-18",
+      "departure_time": "10:30",
+      "available_seats": 45,
+      "price_JOD": 2.25,
+      "status": "Scheduled"
+    },
+    {
+      "trip_id": "T20251218-105-C",
+      "route_id": "R105",
+      "bus_id": "B2003",
+      "departure_date": "2025-12-18",
+      "departure_time": "08:15",
+      "available_seats": 12,
+      "price_JOD": 4.5,
+      "status": "Almost Full"
+    },
+    {
+      "trip_id": "T20251218-101-D",
+      "route_id": "R101",
+      "bus_id": "B2004",
+      "departure_date": "2025-12-18",
+      "departure_time": "15:00",
+      "available_seats": 38,
+      "price_JOD": 3.5,
+      "status": "Scheduled"
+    },
+    {
+      "trip_id": "T20251219-103-E",
+      "route_id": "R103",
+      "bus_id": "B2001",
+      "departure_date": "2025-12-19",
+      "departure_time": "12:00",
+      "available_seats": 5,
+      "price_JOD": 1.5,
+      "status": "Scheduled"
+    },
+    {
+      "trip_id": "T20251219-104-F",
+      "route_id": "R104",
+      "bus_id": "B2002",
+      "departure_date": "2025-12-19",
+      "departure_time": "14:30",
+      "available_seats": 48,
+      "price_JOD": 1.75,
+      "status": "Scheduled"
+    },
+    {
+      "trip_id": "T20251219-102-G",
+      "route_id": "R102",
+      "bus_id": "B2003",
+      "departure_date": "2025-12-19",
+      "departure_time": "17:00",
+      "available_seats": 30,
+      "price_JOD": 1.0,
+      "status": "Scheduled"
+    }
+  ],
+  "users": [
+    {
+      "user_id": "U1001",
+      "username": "khalidr",
+      "full_name": "Khaled Al-Rashid",
+      "email": "khaled@example.com",
+      "password": "password123",
+      "phone": "+962791234567",
+      "role": "customer",
+      "balance": 25.0
+    },
+    {
+      "user_id": "U1002",
+      "username": "Abdallah_maani",
+      "full_name": "Abdallah Maani",
+      "email": "abdallah@example.com",
+      "password": "securepass",
+      "phone": "+962771234567",
+      "role": "customer",
+      "balance": 8.5
+    },
+    {
+      "user_id": "A9001",
+      "username": "adminjo",
+      "full_name": "System Admin",
+      "email": "admin@jordanbus.com",
+      "password": "admin",
+      "phone": "+962781234567",
+      "role": "admin",
+      "balance": 0.0
+    }
+  ],
+  "bookings": [
+    {
+      "booking_id": "BK-9001",
+      "user_id": "U1001",
+      "trip_id": "T20251216-101-A",
+      "booking_date": "2025-12-14T10:30:00",
+      "status": "Confirmed",
+      "price_paid": 3.65
+    },
+    {
+      "booking_id": "BK-9002",
+      "user_id": "U1002",
+      "trip_id": "T20251217-103-M",
+      "booking_date": "2025-12-15T09:15:00",
+      "status": "Confirmed",
+      "price_paid": 1.6
+    }
+  ]
+}

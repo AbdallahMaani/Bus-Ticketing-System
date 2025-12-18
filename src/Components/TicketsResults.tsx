@@ -1,0 +1,127 @@
+import React, { useState } from "react";
+import {
+  Paper,
+  Text,
+  Group,
+  Button,
+  Stack,
+  Badge,
+  Collapse,
+  Table,
+  Center,
+  Title,
+} from "@mantine/core";
+import type { Trip } from "./TicketForm";
+
+export default function TicketsResults({ trips }: { trips: Trip[] }) {
+  // this line defines the component and its props the props are typed using TypeScript and they are expected to be an array of Trip objects
+  const [expandedTripIds, setExpandedTripIds] = useState<string[]>([]);
+
+  const toggleDetails = (id: string) => {
+    setExpandedTripIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  if (!trips || trips.length === 0) {
+    return (
+      <Paper shadow="md" p="xl" withBorder radius="lg" w="100%">
+        <Center>
+          <Stack align="center" gap="xs">
+            <Title order={4} c="dimmed" ta="center">
+              Search for trips to see available options.
+            </Title>
+            <Text c="dimmed" size="sm">
+              Thanks for using Jordan Bus System.
+            </Text>
+          </Stack>
+        </Center>
+      </Paper>
+    );
+  }
+
+  return (
+    <Stack gap="md" w="100%">
+      <Text size="xl" fw={700} mb="sm">
+        Available Trips ({trips.length})
+      </Text>
+      {trips.map((trip) => {
+        const isExpanded = expandedTripIds.includes(trip.trip_id);
+        return (
+          <Paper key={trip.trip_id} shadow="md" p="lg" withBorder radius="lg">
+            <Group justify="space-between" align="center">
+              <div>
+                <Group mb={5}>
+                  <Text fw={700} size="lg">
+                    {trip.origin_name} - {trip.destination_name}
+                  </Text>
+                  <Badge color={trip.available_seats > 5 ? "green" : "red"}>
+                    {trip.available_seats} Seats Left
+                  </Badge>
+                </Group>
+                <Text c="dimmed" size="sm">
+                  Date: {trip.departure_date}
+                  </Text>
+                <Text c="dimmed" size="sm">
+                  Departure Time:{" "}
+                  {trip.departure_time}
+                </Text>
+                <Text c="dimmed" size="sm">
+                  Station: {trip.origin_station}
+                </Text>
+                <Text c="dimmed" size="sm">
+                  Street: {trip.origin_street}
+                </Text>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <Text size="xl" fw={800} c="blue" mb={5}>
+                  {trip.price_JOD.toFixed(2)} JOD
+                </Text>
+                <Button
+                  variant="light"
+                  color="blue"
+                  mr={10}
+                  onClick={() => toggleDetails(trip.trip_id)}
+                  radius="md"
+                  size="xs"
+                >
+                  {isExpanded ? "Hide Details" : "Details"}
+                </Button>
+                <Button variant="outline" color="blue" mr={10} radius="md" size="xs">
+                  Show on map
+                </Button>
+                <Button color="blue" radius="md" size="xs">
+                  Book Now
+                </Button>
+              </div>
+            </Group>
+            <Collapse in={isExpanded} mt="md">
+              <Table striped highlightOnHover withTableBorder>
+                <Table.Tbody>
+                  <Table.Tr>
+                    <Table.Td fw={700} w={150}>
+                      Trip ID
+                    </Table.Td>
+                    <Table.Td>{trip.trip_id}</Table.Td>
+                  </Table.Tr>
+                  <Table.Tr>
+                    <Table.Td fw={700}>Driver</Table.Td>
+                    <Table.Td>{trip.driver_name}</Table.Td>
+                  </Table.Tr>
+                  <Table.Tr>
+                    <Table.Td fw={700}>Features</Table.Td>
+                    <Table.Td>{trip.features.join(", ")}</Table.Td>
+                  </Table.Tr>
+                  <Table.Tr>
+                    <Table.Td fw={700}>Rating</Table.Td>
+                    <Table.Td>{trip.rating}</Table.Td>
+                  </Table.Tr>
+                </Table.Tbody>
+              </Table>
+            </Collapse>
+          </Paper>
+        );
+      })}
+    </Stack>
+  );
+}
