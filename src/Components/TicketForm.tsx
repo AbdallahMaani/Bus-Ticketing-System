@@ -81,9 +81,13 @@ export type Trip = {
 export default function TicketForm({
   onSearch,
   onResults,
+  onReset,
+  resetKey,
 }: {
   onSearch?: (criteria: Criteria) => void;
   onResults?: (trips: Trip[]) => void;
+  onReset?: () => void;
+  resetKey?: number;
 }) {
   /*  States  */
   const [cityOptions, setCityOptions] = useState<CityOption[]>([]);
@@ -145,6 +149,100 @@ export default function TicketForm({
       prev.includes(name) ? prev.filter((f) => f !== name) : [...prev, name]
     );
   };
+
+  /* perform a search when both from and to are selected */
+  useEffect(() => {
+    const performSearch = () => {
+      if (!from || !to) return;
+
+      // 1️⃣ Match routes
+      const matchedRoutes = routes.filter(
+        (r) => r.origin_id === from && r.destination_id === to
+      );
+
+      // 2️⃣ Filter trips by route & date (date not part of this simple form)
+      let filteredTrips = trips.filter((t) =>
+        matchedRoutes.some((r) => r.route_id === t.route_id)
+      );
+
+      // 3️⃣ Filter by bus features
+      filteredTrips = filteredTrips.filter((trip) => {
+        const bus = buses.find((b) => b.bus_id === trip.bus_id);
+        if (!bus) return false;
+
+        return filters.every((f) => bus.features.includes(f));
+      });
+
+      // Enrich trips with city names
+      const enrichedTrips = filteredTrips.map((trip) => {
+        const route = routes.find((r) => r.route_id === trip.route_id);
+        const origin = cityOptions.find((c) => c.value === route?.origin_id)
+          ?.label;
+        const destination = cityOptions.find(
+          (c) => c.value === route?.destination_id
+        )?.label;
+
+        const originArea = areas.find((a) => a.city_id === route?.origin_id);
+        const destArea = areas.find((a) => a.city_id === route?.destination_id);
+
+        return {
+          ...trip,
+          origin_name: origin,
+          destination_name: destination,
+          rating: buses.find((b) => b.bus_id === trip.bus_id)?.rating || 0,
+          features: buses.find((b) => b.bus_id === trip.bus_id)?.features || [],
+          driver_name:
+            buses.find((b) => b.bus_id === trip.bus_id)?.driver_name || "",
+          origin_station: originArea?.station_name,
+          origin_street: originArea?.street_en,
+          origin_lat: originArea?.lat,
+          origin_lng: originArea?.lng,
+          destination_station: destArea?.station_name,
+          destination_street: destArea?.street_en,
+          destination_lat: destArea?.lat,
+          destination_lng: destArea?.lng,
+        };
+      });
+
+      if (enrichedTrips.length === 0) {
+        setNoResults(true);
+      } else {
+        setNoResults(false);
+      }
+
+      if (onSearch) {
+        onSearch({
+          from: from || "",
+          to: to || "",
+          date,
+          sortBy: sortBy || "departure",
+          filters,
+        });
+      }
+
+      if (onResults) {
+        onResults(enrichedTrips);
+      }
+    };
+
+    performSearch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [from, to]);
+
+  /* reset when parent requests it */
+  useEffect(() => {
+    if (resetKey === undefined) return;
+    // clear local state
+    setFrom(null);
+    setTo(null);
+    setDate("");
+    setSortBy("departure");
+    setFilters([]);
+    setNoResults(false);
+    // notify parent if needed
+    if (onReset) onReset();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetKey]);
 
   /* ===== Submit ===== */
   const handleSubmit = (e: React.FormEvent) => {

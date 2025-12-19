@@ -83,10 +83,12 @@ export default function AdvancedFilters({
   onSearch,
   onResults,
   onClose,
+  onReset,
 }: {
   onSearch?: (criteria: Criteria) => void;
   onResults?: (trips: Trip[]) => void;
   onClose?: () => void;
+  onReset?: () => void;
 }) {
   /*  States  */
   const [cityOptions, setCityOptions] = useState<CityOption[]>([]);
@@ -242,6 +244,11 @@ export default function AdvancedFilters({
 
   /* ===== Reset ===== */
   const handleReset = () => {
+    // if parent provided a centralized reset handler, use it
+    if (onReset) {
+      onReset();
+    }
+
     setFrom(null);
     setTo(null);
     setDate("");
@@ -348,7 +355,7 @@ export default function AdvancedFilters({
 
         <Group mt="sm" grow>
           <Button type="submit" radius="md" color="blue" onClick={handleSubmit}>
-            Search Trips
+            Apply Filters
           </Button>
           <Button
             variant="outline"

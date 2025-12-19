@@ -42,16 +42,16 @@ export default function TicketsResults({ trips }: { trips: Trip[] }) {
 
   return (
     <Stack gap="md" w="100%">
-      <Text size="xl" fw={700} mb="sm">
+      <Text size="xl" fw={700} mb="sm" ta="center">
         Available Trips ({trips.length})
       </Text>
       {trips.map((trip) => {
         const isExpanded = expandedTripIds.includes(trip.trip_id);
         return (
           <Paper key={trip.trip_id} shadow="md" p="lg" withBorder radius="lg">
-            <Group justify="space-between" align="center">
-              <div>
-                <Group mb={5}>
+            <Group justify="center" align="center" gap="xl">
+              <Stack align="center" gap={5}>
+                <Group justify="center" mb={5}>
                   <Text fw={700} size="lg">
                     {trip.origin_name} - {trip.destination_name}
                   </Text>
@@ -61,7 +61,7 @@ export default function TicketsResults({ trips }: { trips: Trip[] }) {
                 </Group>
                 <Text c="dimmed" size="sm">
                   Date: {trip.departure_date}
-                  </Text>
+                </Text>
                 <Text c="dimmed" size="sm">
                   Departure Time:{" "}
                   {trip.departure_time}
@@ -72,28 +72,30 @@ export default function TicketsResults({ trips }: { trips: Trip[] }) {
                 <Text c="dimmed" size="sm">
                   Street: {trip.origin_street}
                 </Text>
-              </div>
-              <div style={{ textAlign: "right" }}>
+              </Stack>
+
+              <Stack align="center" gap="xs">
                 <Text size="xl" fw={800} c="blue" mb={5}>
                   {trip.price_JOD.toFixed(2)} JOD
                 </Text>
-                <Button
-                  variant="light"
-                  color="blue"
-                  mr={10}
-                  onClick={() => toggleDetails(trip.trip_id)}
-                  radius="md"
-                  size="xs"
-                >
-                  {isExpanded ? "Hide Details" : "Details"}
-                </Button>
-                <Button variant="outline" color="blue" mr={10} radius="md" size="xs">
-                  Show on map
-                </Button>
-                <Button color="blue" radius="md" size="xs">
-                  Book Now
-                </Button>
-              </div>
+                <Group justify="center" gap="xs">
+                  <Button
+                    variant="light"
+                    color="blue"
+                    onClick={() => toggleDetails(trip.trip_id)}
+                    radius="md"
+                    size="xs"
+                  >
+                    {isExpanded ? "Hide Details" : "Details"}
+                  </Button>
+                  <Button variant="outline" color="blue" radius="md" size="xs">
+                    Show on map
+                  </Button>
+                  <Button color="blue" radius="md" size="xs">
+                    Book Now
+                  </Button>
+                </Group>
+              </Stack>
             </Group>
             <Collapse in={isExpanded} mt="md">
               <Table striped highlightOnHover withTableBorder>

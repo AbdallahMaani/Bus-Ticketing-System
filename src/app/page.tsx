@@ -62,7 +62,7 @@ export default function Home() {
         >
           {/* Left sidebar - Fixed 25% width */}
           <Box
-            w={{ base: "100%", lg: "22%" }}
+            w={{ base: "100%", lg: "23%" }}
             bg="#f8f9fa"
             p={{ base: "1rem", lg: "1.5rem" }}
             style={{
@@ -72,7 +72,7 @@ export default function Home() {
               boxShadow: "2px 0 5px rgba(0, 0, 0, 0.05)",
             }}
           >
-            <TicketForm onResults={handleResults} />
+            <TicketForm onResults={handleResults} resetKey={resetKey} onReset={() => { setTrips([]); setSearched(false); }} />
             <div ref={resultsRef} style={{ marginTop: "3rem" }}>
               <TicketsResults trips={trips} />
             </div>
@@ -80,7 +80,7 @@ export default function Home() {
 
           {/* Right content area - Fixed 75% width */}
           <Box
-            w={{ base: "100%", lg: "80%" }}
+            w={{ base: "100%", lg: "77%" }}
             bg="white"
             p={{ base: "1rem", lg: "1rem" }}
             mih={{ base: 400, lg: 0 }}
@@ -151,6 +151,7 @@ export default function Home() {
                   <AdvancedFilters
                     onResults={handleResults}
                     onClose={() => setShowAdvancedFilters(false)}
+                    onReset={handleReset}
                   />
                 </Box>
               )}
