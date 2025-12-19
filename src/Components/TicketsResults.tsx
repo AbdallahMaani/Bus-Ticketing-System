@@ -11,16 +11,31 @@ import {
   Center,
   Title,
 } from "@mantine/core";
+import { useRouter } from "next/navigation";
 import type { Trip } from "./TicketForm";
+import Booking from "./Booking";
 
-export default function TicketsResults({ trips }: { trips: Trip[] }) {
+export default function TicketsResults({ trips, onShowOnMap, balance, setBalance, onBook }: { trips: Trip[]; onShowOnMap?: (lat?: number, lng?: number) => void; balance: number; setBalance: (balance: number | ((prev: number) => number)) => void; onBook: (price: number) => void }) {
   // this line defines the component and its props the props are typed using TypeScript and they are expected to be an array of Trip objects
   const [expandedTripIds, setExpandedTripIds] = useState<string[]>([]);
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
+  const router = useRouter();
 
   const toggleDetails = (id: string) => {
     setExpandedTripIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
+  };
+
+  const handleBookNow = (trip: Trip) => {
+    const currentUserJson = localStorage.getItem("currentUser");
+    if (!currentUserJson) {
+      router.push("/auth/login");
+      return;
+    }
+    setSelectedTrip(trip);
+    setBookingOpen(true);
   };
 
   if (!trips || trips.length === 0) {
@@ -88,10 +103,10 @@ export default function TicketsResults({ trips }: { trips: Trip[] }) {
                   >
                     {isExpanded ? "Hide Details" : "Details"}
                   </Button>
-                  <Button variant="outline" color="blue" radius="md" size="xs">
+                  <Button variant="outline" color="blue" radius="md" size="xs" onClick={() => onShowOnMap?.(trip.origin_lat, trip.origin_lng)}>
                     Show on map
                   </Button>
-                  <Button color="blue" radius="md" size="xs">
+                  <Button color="blue" radius="md" size="xs" onClick={() => handleBookNow(trip)}>
                     Book Now
                   </Button>
                 </Group>
@@ -124,6 +139,13 @@ export default function TicketsResults({ trips }: { trips: Trip[] }) {
           </Paper>
         );
       })}
+      <Booking
+        opened={bookingOpen}
+        onClose={() => setBookingOpen(false)}
+        trip={selectedTrip}
+        balance={balance}
+        onBook={onBook}
+      />
     </Stack>
   );
 }

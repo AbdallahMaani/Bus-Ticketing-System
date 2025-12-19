@@ -3,8 +3,6 @@
 import React, { useState, useEffect } from "react";
 import {
   Select,
-  TextInput,
-  Checkbox,
   Button,
   Group,
   Title,
@@ -21,7 +19,7 @@ type Criteria = {
   date: string;
   sortBy: string;
   filters: string[];
-};
+};  
 
 type CityOption = {
   value: string;
@@ -98,9 +96,6 @@ export default function TicketForm({
 
   const [from, setFrom] = useState<string | null>("");
   const [to, setTo] = useState<string | null>("");
-  const [date, setDate] = useState("");
-  const [sortBy, setSortBy] = useState<string | null>("departure");
-  const [filters, setFilters] = useState<string[]>([]);
   const [noResults, setNoResults] = useState(false);
 
   /*  Fetch JSON  */
@@ -143,13 +138,6 @@ export default function TicketForm({
     fetchBusData();
   }, []);
 
-  /* ===== Helpers ===== */
-  const toggleFilter = (name: string) => {
-    setFilters((prev) =>
-      prev.includes(name) ? prev.filter((f) => f !== name) : [...prev, name]
-    );
-  };
-
   /* perform a search when both from and to are selected */
   useEffect(() => {
     const performSearch = () => {
@@ -160,18 +148,10 @@ export default function TicketForm({
         (r) => r.origin_id === from && r.destination_id === to
       );
 
-      // 2️⃣ Filter trips by route & date (date not part of this simple form)
+      // 2️⃣ Filter trips by route
       let filteredTrips = trips.filter((t) =>
         matchedRoutes.some((r) => r.route_id === t.route_id)
       );
-
-      // 3️⃣ Filter by bus features
-      filteredTrips = filteredTrips.filter((trip) => {
-        const bus = buses.find((b) => b.bus_id === trip.bus_id);
-        if (!bus) return false;
-
-        return filters.every((f) => bus.features.includes(f));
-      });
 
       // Enrich trips with city names
       const enrichedTrips = filteredTrips.map((trip) => {
@@ -214,9 +194,9 @@ export default function TicketForm({
         onSearch({
           from: from || "",
           to: to || "",
-          date,
-          sortBy: sortBy || "departure",
-          filters,
+          date: "",
+          sortBy: "departure",
+          filters: [],
         });
       }
 
@@ -235,129 +215,11 @@ export default function TicketForm({
     // clear local state
     setFrom(null);
     setTo(null);
-    setDate("");
-    setSortBy("departure");
-    setFilters([]);
     setNoResults(false);
     // notify parent if needed
     if (onReset) onReset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetKey]);
-
-  /* ===== Submit ===== */
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setNoResults(false);
-
-    // 1️⃣ Match routes
-    const matchedRoutes = routes.filter(
-      (r) => (!from || r.origin_id === from) && (!to || r.destination_id === to)
-    );
-
-    // 2️⃣ Filter trips by route & date
-    let filteredTrips = trips.filter(
-      (t) =>
-        matchedRoutes.some((r) => r.route_id === t.route_id) &&
-        (!date || t.departure_date === date)
-    );
-
-    // 3️⃣ Filter by bus features
-    filteredTrips = filteredTrips.filter((trip) => {
-      const bus = buses.find((b) => b.bus_id === trip.bus_id);
-      if (!bus) return false;
-
-      return filters.every((f) => bus.features.includes(f));
-    });
-
-    // 4️⃣ Sorting
-    if (sortBy === "price") {
-      filteredTrips.sort((a, b) => a.price_JOD - b.price_JOD);
-    } else if (sortBy === "rating") {
-      filteredTrips.sort((a, b) => {
-        const busA = buses.find((x) => x.bus_id === a.bus_id)?.rating || 0;
-        const busB = buses.find((x) => x.bus_id === b.bus_id)?.rating || 0;
-        return busB - busA;
-      });
-    } else if (sortBy === "available") {
-      filteredTrips.sort((a, b) => b.available_seats - a.available_seats);
-    }
-
-    // Enrich trips with city names
-    const enrichedTrips = filteredTrips.map((trip) => {
-      const route = routes.find((r) => r.route_id === trip.route_id);
-      const origin = cityOptions.find(
-        (c) => c.value === route?.origin_id
-      )?.label;
-      const destination = cityOptions.find(
-        (c) => c.value === route?.destination_id
-      )?.label;
-
-      const originArea = areas.find((a) => a.city_id === route?.origin_id);
-      const destArea = areas.find((a) => a.city_id === route?.destination_id);
-
-      return {
-        ...trip,
-        origin_name: origin,
-        destination_name: destination,
-        rating: buses.find((b) => b.bus_id === trip.bus_id)?.rating || 0,
-        features: buses.find((b) => b.bus_id === trip.bus_id)?.features || [],
-        driver_name:
-          buses.find((b) => b.bus_id === trip.bus_id)?.driver_name || "",
-        origin_station: originArea?.station_name,
-        origin_street: originArea?.street_en,
-        origin_lat: originArea?.lat,
-        origin_lng: originArea?.lng,
-        destination_station: destArea?.station_name,
-        destination_street: destArea?.street_en,
-        destination_lat: destArea?.lat,
-        destination_lng: destArea?.lng,
-      };
-    });
-
-    if (enrichedTrips.length === 0) {
-      setNoResults(true);
-    }
-
-    console.log("🎯 Filtered Trips Result:", enrichedTrips);
-
-    if (onSearch) {
-      onSearch({
-        from: from || "",
-        to: to || "",
-        date,
-        sortBy: sortBy || "departure",
-        filters,
-      });
-    }
-
-    if (onResults) {
-      onResults(enrichedTrips);
-    }
-  };
-
-  /* ===== Reset ===== */
-  const handleReset = () => {
-    setFrom(null);
-    setTo(null);
-    setDate("");
-    setSortBy("departure");
-    setFilters([]);
-    setNoResults(false);
-
-    if (onSearch) {
-      onSearch({
-        from: "",
-        to: "",
-        date: "",
-        sortBy: "departure",
-        filters: [],
-      });
-    }
-
-    if (onResults) {
-      onResults([]);
-    }
-  };
 
   /* ===== Styles ===== */
   const blackTextStyle = {

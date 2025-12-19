@@ -24,34 +24,6 @@ type Criteria = {
   filters: string[];
 };
 
-type CityOption = {
-  value: string;
-  label: string;
-};
-
-type Route = {
-  route_id: string;
-  origin_id: string;
-  destination_id: string;
-};
-
-type Bus = {
-  bus_id: string;
-  rating: number;
-  features: string[];
-  driver_name: string;
-};
-
-type Areas = {
-  id: string;
-  city_id: string;
-  name_en: string;
-  station_name: string;
-  street_en: string;
-  lat?: number;
-  lng?: number;
-};
-
 export type Trip = {
   trip_id: string;
   route_id: string;
@@ -84,65 +56,21 @@ export default function AdvancedFilters({
   onResults,
   onClose,
   onReset,
+  currentTrips,
+  onClearMapRoutes,
 }: {
   onSearch?: (criteria: Criteria) => void;
   onResults?: (trips: Trip[]) => void;
   onClose?: () => void;
   onReset?: () => void;
+  currentTrips: Trip[];
+  onClearMapRoutes?: () => void;
 }) {
   /*  States  */
-  const [cityOptions, setCityOptions] = useState<CityOption[]>([]);
-  const [routes, setRoutes] = useState<Route[]>([]);
-  const [buses, setBuses] = useState<Bus[]>([]);
-  const [trips, setTrips] = useState<Trip[]>([]);
-  const [areas, setAreas] = useState<Areas[]>([]);
-
-  const [from, setFrom] = useState<string | null>("");
-  const [to, setTo] = useState<string | null>("");
   const [date, setDate] = useState("");
   const [sortBy, setSortBy] = useState<string | null>("departure");
   const [filters, setFilters] = useState<string[]>([]);
   const [noResults, setNoResults] = useState(false);
-
-  /*  Fetch JSON  */
-  useEffect(() => {
-    const fetchBusData = async () => {
-      try {
-        const res = await fetch("/jordan_bus_data.json");
-
-        if (!res.ok) {
-          console.log("❌ No response from JSON file");
-          return;
-        }
-
-        const data = await res.json();
-        console.log("✅ JSON loaded successfully:", data);
-
-        // Cities
-        if (Array.isArray(data.cities)) {
-          setCityOptions(
-            data.cities.map((city: any) => ({
-              value: city.id,
-              label: city.name_en,
-            }))
-          );
-        }
-
-        if (Array.isArray(data.areas)) {
-          setAreas(data.areas);
-        }
-
-        // Other data
-        setRoutes(data.routes || []);
-        setBuses(data.buses || []);
-        setTrips(data.trips || []);
-      } catch (err) {
-        console.error("❌ Error loading JSON:", err);
-      }
-    };
-
-    fetchBusData();
-  }, []);
 
   /* ===== Helpers ===== */
   const toggleFilter = (name: string) => {
@@ -156,81 +84,39 @@ export default function AdvancedFilters({
     e.preventDefault();
     setNoResults(false);
 
-    // 1️⃣ Match routes
-    const matchedRoutes = routes.filter(
-      (r) => (!from || r.origin_id === from) && (!to || r.destination_id === to)
-    );
+    // Start with current trips
+    let filteredTrips = currentTrips.slice();
 
-    // 2️⃣ Filter trips by route & date
-    let filteredTrips = trips.filter(
-      (t) =>
-        matchedRoutes.some((r) => r.route_id === t.route_id) &&
-        (!date || t.departure_date === date)
-    );
+    // 1️⃣ Filter by date
+    if (date) {
+      filteredTrips = filteredTrips.filter((t) => t.departure_date === date);
+    }
 
-    // 3️⃣ Filter by bus features
+    // 2️⃣ Filter by bus features
     filteredTrips = filteredTrips.filter((trip) => {
-      const bus = buses.find((b) => b.bus_id === trip.bus_id);
-      if (!bus) return false;
-
-      return filters.every((f) => bus.features.includes(f));
+      return filters.every((f) => trip.features.includes(f));
     });
 
-    // 4️⃣ Sorting
+    // 3️⃣ Sorting
     if (sortBy === "price") {
       filteredTrips.sort((a, b) => a.price_JOD - b.price_JOD);
     } else if (sortBy === "rating") {
-      filteredTrips.sort((a, b) => {
-        const busA = buses.find((x) => x.bus_id === a.bus_id)?.rating || 0;
-        const busB = buses.find((x) => x.bus_id === b.bus_id)?.rating || 0;
-        return busB - busA;
-      });
+      filteredTrips.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     } else if (sortBy === "available") {
       filteredTrips.sort((a, b) => b.available_seats - a.available_seats);
     }
 
-    // Enrich trips with city names
-    const enrichedTrips = filteredTrips.map((trip) => {
-      const route = routes.find((r) => r.route_id === trip.route_id);
-      const origin = cityOptions.find(
-        (c) => c.value === route?.origin_id
-      )?.label;
-      const destination = cityOptions.find(
-        (c) => c.value === route?.destination_id
-      )?.label;
-
-      const originArea = areas.find((a) => a.city_id === route?.origin_id);
-      const destArea = areas.find((a) => a.city_id === route?.destination_id);
-
-      return {
-        ...trip,
-        origin_name: origin,
-        destination_name: destination,
-        rating: buses.find((b) => b.bus_id === trip.bus_id)?.rating || 0,
-        features: buses.find((b) => b.bus_id === trip.bus_id)?.features || [],
-        driver_name:
-          buses.find((b) => b.bus_id === trip.bus_id)?.driver_name || "",
-        origin_station: originArea?.station_name,
-        origin_street: originArea?.street_en,
-        origin_lat: originArea?.lat,
-        origin_lng: originArea?.lng,
-        destination_station: destArea?.station_name,
-        destination_street: destArea?.street_en,
-        destination_lat: destArea?.lat,
-        destination_lng: destArea?.lng,
-      };
-    });
+    // Already enriched
+    const enrichedTrips = filteredTrips;
 
     if (enrichedTrips.length === 0) {
       setNoResults(true);
     }
 
-    console.log("🎯 Filtered Trips Result:", enrichedTrips);
-
     if (onSearch) {
       onSearch({
-        from: from || "",
-        to: to || "",
+        from: "",
+        to: "",
         date,
         sortBy: sortBy || "departure",
         filters,
@@ -242,15 +128,17 @@ export default function AdvancedFilters({
     }
   };
 
-  /* ===== Reset ===== */
   const handleReset = () => {
     // if parent provided a centralized reset handler, use it
     if (onReset) {
       onReset();
     }
 
-    setFrom(null);
-    setTo(null);
+    // Clear map routes and markers
+    if (onClearMapRoutes) {
+      onClearMapRoutes();
+    }
+
     setDate("");
     setSortBy("departure");
     setFilters([]);
@@ -267,7 +155,7 @@ export default function AdvancedFilters({
     }
 
     if (onResults) {
-      onResults([]);
+      onResults(currentTrips);
     }
   };
 
@@ -284,18 +172,19 @@ export default function AdvancedFilters({
       component="form"
       p="1.5rem"
       radius={20}
-      bg="rgba(255, 255, 255, 0.9)"
-      shadow="md"
+      bg="rgba(240, 240, 240, 0.45)"
+      shadow="xl"
+      style={{ backdropFilter: "blur(20px)" }}
     >
       <Stack gap="md">
         <Group justify="space-between" align="center">
-          <Title order={4}>Advanced Filters</Title>
+          <Title order={4} c="black">Advanced Filters</Title>
           {onClose && (
             <ActionIcon variant="subtle" color="gray" onClick={onClose}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
+                width="24"
+                height="24"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"

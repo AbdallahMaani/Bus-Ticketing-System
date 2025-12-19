@@ -1,37 +1,81 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Box, Flex, ActionIcon } from "@mantine/core";
 import Header from "../Components/Header";
 import Footer from "../Components/Footer";
 import TicketForm, { Trip } from "../Components/TicketForm";
 import TicketsResults from "@/Components/TicketsResults";
-import BusMap from "@/Components/BusMap";
+import BusMap, { BusMapRef } from "@/Components/BusMap";
 import AdvancedFilters from "@/Components/AdvancedFilters";
 
 export default function Home() {
   const [trips, setTrips] = useState<Trip[]>([]);
+  const [unfilteredTrips, setUnfilteredTrips] = useState<Trip[]>([]);
   const [searched, setSearched] = useState(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [resetKey, setResetKey] = useState(0);
-  const resultsRef = useRef<HTMLDivElement>(null); //the useRef hook will be used to reference the TicketResults component by scrolling to it when new results are available
-  const formRef = useRef<HTMLDivElement | null>(null);
+  const [busData, setBusData] = useState<any>(null);
+  const [balance, setBalance] = useState(0);
+  const mapRef = useRef<BusMapRef>(null);
+
+  useEffect(() => {
+    const fetchBusData = async () => {
+      try {
+        const res = await fetch("/jordan_bus_data.json");
+        const data = await res.json();
+        setBusData(data);
+        
+        // Get balance from logged-in user or default
+        const currentUserJson = localStorage.getItem("currentUser");
+        if (currentUserJson) {
+          const currentUser = JSON.parse(currentUserJson);
+          setBalance(currentUser.balance || 0);
+        } else {
+          // Default to U1001 if no user logged in
+          const user = data.users.find((u: any) => u.user_id === 'U1001');
+          setBalance(user ? user.balance : 1000);
+        }
+      } catch (err) {
+        console.error("Error loading bus data:", err);
+        setBalance(1000);
+      }
+    };
+    fetchBusData();
+  }, []);
   const handleResults = (foundTrips: Trip[]) => {
     setTrips(foundTrips);
+    setUnfilteredTrips(foundTrips);
     setSearched(true);
-    if (foundTrips.length > 0) {
-      setTimeout(() => {
-        resultsRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
-    }
   };
 
   const handleReset = () => {
     setResetKey((k) => k + 1);
     setTrips([]);
+    setUnfilteredTrips([]);
     setSearched(false);
-    // scroll back to form
-    formRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Clear map routes and markers
+    mapRef.current?.clearRoutes();
+  };
+
+  const handleShowOnMap = (lat?: number, lng?: number) => {
+    if (lat && lng && mapRef.current) {
+      mapRef.current.zoomTo(lat, lng);
+    }
+  };
+
+  const handleBook = (price: number) => {
+    setBalance(prev => {
+      const newBalance = prev - price;
+      // Update localStorage if user is logged in
+      const currentUserJson = localStorage.getItem("currentUser");
+      if (currentUserJson) {
+        const currentUser = JSON.parse(currentUserJson);
+        currentUser.balance = newBalance;
+        localStorage.setItem("currentUser", JSON.stringify(currentUser));
+      }
+      return newBalance;
+    });
   };
 
   return (
@@ -73,8 +117,8 @@ export default function Home() {
             }}
           >
             <TicketForm onResults={handleResults} resetKey={resetKey} onReset={() => { setTrips([]); setSearched(false); }} />
-            <div ref={resultsRef} style={{ marginTop: "3rem" }}>
-              <TicketsResults trips={trips} />
+            <div style={{ marginTop: "3rem" }}>
+              <TicketsResults trips={trips} onShowOnMap={handleShowOnMap} balance={balance} setBalance={setBalance} onBook={handleBook} />
             </div>
           </Box>
 
@@ -108,12 +152,12 @@ export default function Home() {
                 position: "relative",
               }}
             >
-              <BusMap />
+              <BusMap ref={mapRef} trips={trips} />
               {!showAdvancedFilters && (
                 <ActionIcon
                   variant="filled"
                   color="blue"
-                  size="lg"
+                  size="xl"
                   radius="xl"
                   onClick={() => setShowAdvancedFilters(true)}
                   style={{
@@ -149,9 +193,11 @@ export default function Home() {
                   }}
                 >
                   <AdvancedFilters
-                    onResults={handleResults}
+                    onResults={setTrips}
                     onClose={() => setShowAdvancedFilters(false)}
                     onReset={handleReset}
+                    currentTrips={unfilteredTrips}
+                    onClearMapRoutes={() => mapRef.current?.clearRoutes()}
                   />
                 </Box>
               )}

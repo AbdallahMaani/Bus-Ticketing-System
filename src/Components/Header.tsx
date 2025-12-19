@@ -54,7 +54,7 @@ function Header() {
       <Group justify="space-between" h="100%" align="center" w="100%">
         <Link href="/" style={{ textDecoration: "none" }}>
           <Group gap="xs">
-            <ThemeIcon color="blue" variant="light" size="lg" radius="md">
+            <ThemeIcon color="blue" variant="light" size="lg" radius="lg">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="20"
@@ -87,13 +87,13 @@ function Header() {
         </Link>
 
         <Group gap="md">
-          <Button variant="subtle" component={Link} href="/" size="lg">
+          <Button variant="subtle" component={Link} href="/" size="lg" radius="md">
             Home
           </Button>
-          <Button variant="subtle" component={Link} href="/history" size="lg">
+          <Button variant="subtle" component={Link} href="/history" size="lg" radius="md">
             History
           </Button>
-          <Button variant="subtle" component={Link} href="/about" size="lg">
+          <Button variant="subtle" component={Link} href="/about" size="lg" radius="md">
             About
           </Button>
         </Group>
@@ -126,7 +126,7 @@ function Header() {
               </Menu.Dropdown>
             </Menu>
           ) : (
-            <Button component={Link} href="/auth/login">
+            <Button component={Link} href="/auth/login" radius="md">
               Login
             </Button>
           )}
