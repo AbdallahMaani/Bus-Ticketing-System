@@ -40,7 +40,7 @@ function Booking({ opened, onClose, trip, balance, onBook }: BookingProps) {
   };
 
   return (
-    <Modal opened={opened} onClose={onClose} title="Confirm Booking" centered>
+    <Modal opened={opened} onClose={onClose} title="Confirm Booking" centered radius="lg">
       <Stack>
         <Text fw={700} size="lg">
           {trip.origin_name} → {trip.destination_name}
@@ -54,13 +54,14 @@ function Booking({ opened, onClose, trip, balance, onBook }: BookingProps) {
           {balance >= trip.price_JOD ? 'Sufficient funds' : 'Insufficient funds'}
         </Text>
         <Group justify="flex-end">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} radius="md">
             Cancel
           </Button>
           <Button
             onClick={handleConfirm}
             disabled={balance < trip.price_JOD}
             color="blue"
+            radius="md"
           >
             Confirm Booking
           </Button>
