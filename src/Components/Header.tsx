@@ -96,6 +96,7 @@ function Header() {
           <Button variant="subtle" component={Link} href="/about" size="lg" radius="md">
             About
           </Button>
+          
         </Group>
 
         <Group>
@@ -120,6 +121,10 @@ function Header() {
               </Menu.Target>
 
               <Menu.Dropdown>
+              <Menu.Item component={Link} href="/myprofile">
+                  My Profile
+                </Menu.Item>
+
                 <Menu.Item color="red" onClick={handleLogout}>
                   Logout
                 </Menu.Item>

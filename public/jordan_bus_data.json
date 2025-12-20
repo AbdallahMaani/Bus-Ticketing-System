@@ -228,21 +228,27 @@
       "city_id": "LOC_AJL",
       "name_en": "Castle",
       "station_name": "Ajloun Castle Bus Stop",
-      "street_en": "Near Ajloun Castle road"
+      "street_en": "Near Ajloun Castle road",
+      "lat": 32.3330,
+      "lng": 35.7521
     },
     {
       "id": "AREA_AJL_2",
       "city_id": "LOC_AJL",
       "name_en": "Central",
       "station_name": "Central Ajloun Bus Station",
-      "street_en": "Near Prince Hassan Street"
+      "street_en": "Near Prince Hassan Street",
+      "lat": 32.3330,
+      "lng": 35.7521
     },
     {
       "id": "AREA_AJL_3",
       "city_id": "LOC_AJL",
       "name_en": "North",
       "station_name": "North Ajloun Terminal",
-      "street_en": "Near northern forest reserve road"
+      "street_en": "Near northern forest reserve road",
+      "lat": 32.3330,
+      "lng": 35.7521
     },
     {
       "id": "AREA_MAD_1",
