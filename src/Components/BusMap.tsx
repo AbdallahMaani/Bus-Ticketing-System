@@ -5,28 +5,76 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { Trip } from "./TicketForm";
 
+import { Areas } from "./TicketForm"; // Import Areas type
+ 
 export interface BusMapRef {
-  zoomTo: (lat: number, lng: number) => void;
+  showTripRoute: (trip: Trip) => void; // New method to show a specific trip's route and zoom
   clearRoutes: () => void;
 }
 
-const BusMap = forwardRef<BusMapRef, { trips: Trip[] }>(({ trips }, ref) => {
+interface RouteFeature { // Define the structure of a route feature to replace any word
+  type: "Feature";
+  geometry: {
+    type: "LineString";
+    coordinates: number[][];
+  };
+  properties: Record<string, unknown>;
+}
+
+const BusMap = forwardRef<BusMapRef, { trips: Trip[]; allAreas: Areas[]; fromCityId: string | null; toCityId: string | null }>(({ trips, allAreas, fromCityId, toCityId }, ref) => {
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const markersRef = useRef<maplibregl.Marker[]>([]);
 
   useImperativeHandle(ref, () => ({
-    zoomTo: (lat: number, lng: number) => {
+    showTripRoute: async (trip: Trip) => {
       if (mapRef.current) {
-        mapRef.current.flyTo({
-          center: [lng, lat],
-          zoom: 14,
+        // Clear any previously drawn routes
+        if (mapRef.current.isStyleLoaded()) {
+          const source = mapRef.current.getSource("routes") as maplibregl.GeoJSONSource;
+          if (source) {
+            source.setData({ type: "FeatureCollection", features: [] });
+          }
+        }
+
+        const { origin_lat, origin_lng, destination_lat, destination_lng } = trip;
+
+        if (!origin_lat || !origin_lng || !destination_lat || !destination_lng) {
+          console.warn("Missing coordinates for trip route.");
+          return;
+        }
+
+        // Fetch and draw the specific route
+        try {
+          const response = await fetch(`https://router.project-osrm.org/route/v1/driving/${origin_lng},${origin_lat};${destination_lng},${destination_lat}?overview=full&geometries=geojson`);
+          const data = await response.json();
+          if (data.routes && data.routes.length > 0 && mapRef.current.isStyleLoaded()) {
+            const source = mapRef.current.getSource("routes") as maplibregl.GeoJSONSource;
+            if (source) {
+              source.setData({
+                type: "FeatureCollection",
+                features: [{ type: "Feature", geometry: data.routes[0].geometry, properties: {} }],
+              });
+            }
+          }
+        } catch (e) {
+          console.error("Error fetching route for trip:", e);
+        }
+
+        // Zoom to fit the route
+        const bounds = new maplibregl.LngLatBounds();
+        bounds.extend([origin_lng, origin_lat]);
+        bounds.extend([destination_lng, destination_lat]);
+        mapRef.current.fitBounds(bounds, {
+          padding: { top: 50, bottom: 50, left: 50, right: 50 }, // Add some padding around the bounds
+          maxZoom: 14, // Don't zoom in too close
           duration: 2000,
         });
       }
     },
     clearRoutes: () => {
       if (mapRef.current && mapRef.current.isStyleLoaded()) {
-        // Clear markers
+        // Clear markers (only those added by this component, not the default ones)
         markersRef.current.forEach((marker) => marker.remove());
         markersRef.current = [];
 
@@ -41,8 +89,6 @@ const BusMap = forwardRef<BusMapRef, { trips: Trip[] }>(({ trips }, ref) => {
       }
     },
   }));
-
-  const markersRef = useRef<maplibregl.Marker[]>([]);
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -95,7 +141,7 @@ const BusMap = forwardRef<BusMapRef, { trips: Trip[] }>(({ trips }, ref) => {
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
 
-    if (trips.length === 0) {
+    // Clear routes when trips change or no trips are present
       const source = map.getSource("routes") as maplibregl.GeoJSONSource;
       if (source) {
         source.setData({
@@ -103,84 +149,43 @@ const BusMap = forwardRef<BusMapRef, { trips: Trip[] }>(({ trips }, ref) => {
           features: [],
         });
       }
-      return;
-    }
+    
+    // Display markers only for areas related to the selected 'from' and 'to' cities
+    const areasToDisplay = allAreas.filter(area => 
+      (fromCityId && area.city_id === fromCityId) || 
+      (toCityId && area.city_id === toCityId)
+    );
 
-    const uniqueMarkers = new Map<string, { lat: number; lng: number; details: string }>();
-    trips.forEach((trip) => {
-      if (trip.origin_lat && trip.origin_lng) {
-        const key = `${trip.origin_lat},${trip.origin_lng}`;
-        if (!uniqueMarkers.has(key)) {
-          uniqueMarkers.set(key, {
-            lat: trip.origin_lat,
-            lng: trip.origin_lng,
-            details: `<strong>${trip.origin_name}</strong><br>Station: ${trip.origin_station}<br>Street: ${trip.origin_street}`,
-          });
-        }
-      }
-      if (trip.destination_lat && trip.destination_lng) {
-        const key = `${trip.destination_lat},${trip.destination_lng}`;
-        if (!uniqueMarkers.has(key)) {
-          uniqueMarkers.set(key, {
-            lat: trip.destination_lat,
-            lng: trip.destination_lng,
-            details: `<strong>${trip.destination_name}</strong><br>Station: ${trip.destination_station}<br>Street: ${trip.destination_street}`,
-          });
-        }
-      }
-    });
+    areasToDisplay.forEach((area) => {
+      if (area.lat && area.lng) { // Ensure coordinates exist
+        // Construct details for the popup
+        const details = `<strong>${area.name_en}</strong><br>Station: ${area.station_name}<br>Street: ${area.street_en}`; 
+        
+        // Create the popup instance
+        const popup = new maplibregl.Popup({
+          closeButton: false, // Hide the close button for hover popups
+          closeOnClick: false, // Prevent the popup from closing when the map is clicked
+          offset: 25, // Offset the popup from the marker
+        }).setHTML(details);
 
-    uniqueMarkers.forEach(({ lat, lng, details }) => {
+        // Create the marker and add it to the map
       const marker = new maplibregl.Marker()
-        .setLngLat([lng, lat])
-        .setPopup(new maplibregl.Popup().setHTML(details))
+        .setLngLat([area.lng, area.lat])
         .addTo(map);
+
+        // Get the marker's DOM element to attach event listeners
+        const markerElement = marker.getElement();
+
+        // Show popup on mouse enter
+        markerElement.addEventListener('mouseenter', () => popup.addTo(map));
+
+        // Hide popup on mouse leave
+        markerElement.addEventListener('mouseleave', () => popup.remove());
+
       markersRef.current.push(marker);
-    });
-
-    const routes = new Map<string, { origin: [number, number]; destination: [number, number] }>();
-    trips.forEach((trip) => {
-      if (trip.origin_lat && trip.origin_lng && trip.destination_lat && trip.destination_lng) {
-        const routeKey = `${trip.origin_lat},${trip.origin_lng}-${trip.destination_lat},${trip.destination_lng}`;
-        if (!routes.has(routeKey)) {
-          routes.set(routeKey, {
-            origin: [trip.origin_lng, trip.origin_lat],
-            destination: [trip.destination_lng, trip.destination_lat],
-          });
-        }
       }
     });
-
-    const routePromises = Array.from(routes.values()).map(async (route) => {
-      const { origin, destination } = route;
-      try {
-        const response = await fetch(`https://router.project-osrm.org/route/v1/driving/${origin[0]},${origin[1]};${destination[0]},${destination[1]}?overview=full&geometries=geojson`);
-        const data = await response.json();
-        if (data.routes && data.routes.length > 0) {
-          return {
-            type: "Feature" as const,
-            geometry: data.routes[0].geometry,
-            properties: {},
-          };
-        }
-      } catch (e) {
-        console.error("Error fetching route:", e);
-      }
-      return null;
-    });
-
-    Promise.all(routePromises).then((routeFeatures) => {
-      if (!map) return;
-      const validFeatures = routeFeatures.filter((f) => f !== null) as any[];
-      const source = map.getSource("routes") as maplibregl.GeoJSONSource;
-      if (source) {
-        source.setData({
-          type: "FeatureCollection",
-          features: validFeatures,
-        });
-      }
-    });
-  }, [trips]);
+  }, [allAreas, fromCityId, toCityId]); // Dependencies for marker display
 
   return (
     <div
@@ -194,5 +199,7 @@ const BusMap = forwardRef<BusMapRef, { trips: Trip[] }>(({ trips }, ref) => {
     />
   );
 });
+
+BusMap.displayName = "BusMap"; //this line sets the display name of the BusMap component for easier debugging and identification in React DevTools
 
 export default BusMap;

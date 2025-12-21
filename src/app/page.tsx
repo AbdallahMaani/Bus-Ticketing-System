@@ -8,23 +8,35 @@ import TicketForm, { Trip } from "../Components/TicketForm";
 import TicketsResults from "@/Components/TicketsResults";
 import BusMap, { BusMapRef } from "@/Components/BusMap";
 import AdvancedFilters from "@/Components/AdvancedFilters";
+import { Areas } from "@/Components/TicketForm"; // Import Areas type
 
 export default function Home() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [unfilteredTrips, setUnfilteredTrips] = useState<Trip[]>([]);
-  const [searched, setSearched] = useState(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [resetKey, setResetKey] = useState(0);
-  const [busData, setBusData] = useState<any>(null);
+  const [fromCity, setFromCity] = useState<string | null>(null); // Lifted state for 'From' city
+  const [toCity, setToCity] = useState<string | null>(null);     // Lifted state for 'To' city
   const [balance, setBalance] = useState(0);
-  const mapRef = useRef<BusMapRef>(null);
+  const [allAreas, setAllAreas] = useState<Areas[]>([]); // New state for all areas
+  const mapRef = useRef<BusMapRef>(null); // Ref for BusMap component mapRef is created using useRef hook with type BusMapRef
+  
+  /* How useRef all connects and why it's used:
+      In page.tsx, mapRef is created.
+      mapRef is passed to the BusMap component: <BusMap ref={mapRef} trips={trips} />.
+      Because BusMap is wrapped in forwardRef, it receives mapRef as its ref prop.
+      Inside BusMap, useImperativeHandle takes this ref and attaches an object containing zoomTo and clearRoutes methods to its .current property.
+      Now, back in page.tsx, the Home component can call these methods directly:
+      mapRef.current?.zoomTo(lat, lng); (e.g., when a user clicks "Show on map" for a trip).
+      mapRef.current?.clearRoutes(); (e.g., when the search results are reset).
+ */
 
   useEffect(() => {
-    const fetchBusData = async () => {
+    const fetchData = async () => {
       try {
         const res = await fetch("/jordan_bus_data.json");
         const data = await res.json();
-        setBusData(data);
+        setAllAreas(data.areas || []); // Store all areas
         
         // Get balance from logged-in user or default
         const currentUserJson = localStorage.getItem("currentUser");
@@ -33,7 +45,9 @@ export default function Home() {
           setBalance(currentUser.balance || 0);
         } else {
           // Default to U1001 if no user logged in
-          const user = data.users.find((u: any) => u.user_id === 'U1001');
+          const user = data.users.find((u: { user_id: string; balance: number }) => u.user_id === 'U1001'); //replace any with specific type
+          // const user = data.users.find((u: any) => u.user_id === 'U1001'); 
+
           setBalance(user ? user.balance : 1000);
         }
       } catch (err) {
@@ -41,26 +55,28 @@ export default function Home() {
         setBalance(1000);
       }
     };
-    fetchBusData();
+    fetchData();
   }, []);
+
   const handleResults = (foundTrips: Trip[]) => {
     setTrips(foundTrips);
     setUnfilteredTrips(foundTrips);
-    setSearched(true);
   };
 
   const handleReset = () => {
-    setResetKey((k) => k + 1);
+    setResetKey((k) => k + 1); // k is an anonymous variable representing the previous key value
+    // we increment it to let useEffect in TicketForm detect the change and reset its internal state like a counter
     setTrips([]);
     setUnfilteredTrips([]);
-    setSearched(false);
     // Clear map routes and markers
-    mapRef.current?.clearRoutes();
+    mapRef.current?.clearRoutes(); // clearRoutes is defined in BusMap component
   };
 
-  const handleShowOnMap = (lat?: number, lng?: number) => {
-    if (lat && lng && mapRef.current) {
-      mapRef.current.zoomTo(lat, lng);
+  const handleShowOnMap = (trip: Trip) => { // Now receives the full trip object
+    if (mapRef.current) {
+      mapRef.current.showTripRoute(trip); // Call the new method in BusMap
+    } else {
+      console.warn("Map reference not available to show trip route.");
     }
   };
 
@@ -116,12 +132,11 @@ export default function Home() {
               boxShadow: "2px 0 5px rgba(0, 0, 0, 0.05)",
             }}
           >
-            <TicketForm onResults={handleResults} resetKey={resetKey} onReset={() => { setTrips([]); setSearched(false); }} />
+            <TicketForm onResults={handleResults} resetKey={resetKey} onReset={() => { setTrips([]); setFromCity(null); setToCity(null); }} from={fromCity} setFrom={setFromCity} to={toCity} setTo={setToCity} />
             <div style={{ marginTop: "3rem" }}>
-              <TicketsResults trips={trips} onShowOnMap={handleShowOnMap} balance={balance} setBalance={setBalance} onBook={handleBook} />
+              <TicketsResults trips={trips} onShowOnMap={handleShowOnMap} balance={balance} onBook={handleBook} />
             </div>
           </Box>
-
           {/* Right content area - Fixed 75% width */}
           <Box
             w={{ base: "100%", lg: "77%" }}
@@ -152,7 +167,7 @@ export default function Home() {
                 position: "relative",
               }}
             >
-              <BusMap ref={mapRef} trips={trips} />
+              <BusMap ref={mapRef} trips={trips} allAreas={allAreas} fromCityId={fromCity} toCityId={toCity} />
               {!showAdvancedFilters && (
                 <ActionIcon
                   variant="filled"
@@ -204,8 +219,6 @@ export default function Home() {
             </Box>
           </Box>
         </Flex>
-
-        {/* Results Section - Below the split screen */}
       </Box>
 
       <Footer />

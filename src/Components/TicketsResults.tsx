@@ -13,10 +13,10 @@ import {
 } from "@mantine/core";
 import { useRouter } from "next/navigation";
 import type { Trip } from "./TicketForm";
+import type { Route } from "./TicketForm";
 import Booking from "./Booking";
 
-export default function TicketsResults({ trips, onShowOnMap, balance, setBalance, onBook }: { trips: Trip[]; onShowOnMap?: (lat?: number, lng?: number) => void; balance: number; setBalance: (balance: number | ((prev: number) => number)) => void; onBook: (price: number) => void }) {
-  // this line defines the component and its props the props are typed using TypeScript and they are expected to be an array of Trip objects
+export default function TicketsResults({ trips, onShowOnMap, balance, onBook }: { trips: Trip[]; onShowOnMap?: (trip: Trip) => void; balance: number; onBook: (price: number) => void }) {
   const [expandedTripIds, setExpandedTripIds] = useState<string[]>([]);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
@@ -103,7 +103,7 @@ export default function TicketsResults({ trips, onShowOnMap, balance, setBalance
                   >
                     {isExpanded ? "Hide Details" : "Details"}
                   </Button>
-                  <Button variant="outline" color="blue" radius="md" size="xs" onClick={() => onShowOnMap?.(trip.origin_lat, trip.origin_lng)}>
+                  <Button variant="outline" color="blue" radius="md" size="xs" onClick={() => onShowOnMap?.(trip)}> {/* Pass the full trip object */}
                     Show on map
                   </Button>
                   <Button color="blue" radius="md" size="xs" onClick={() => handleBookNow(trip)}>
@@ -133,6 +133,18 @@ export default function TicketsResults({ trips, onShowOnMap, balance, setBalance
                     <Table.Td fw={700}>Rating</Table.Td>
                     <Table.Td>{trip.rating}</Table.Td>
                   </Table.Tr>
+                  {trip.distance_km && (
+                    <Table.Tr>
+                      <Table.Td fw={700}>Distance</Table.Td>
+                      <Table.Td>{trip.distance_km} km</Table.Td>
+                    </Table.Tr>
+                  )}
+                  {trip.duration_hrs && (
+                    <Table.Tr>
+                      <Table.Td fw={700}>Estimated Time</Table.Td>
+                      <Table.Td>{trip.duration_hrs} hours</Table.Td>
+                    </Table.Tr>
+                  )}
                 </Table.Tbody>
               </Table>
             </Collapse>

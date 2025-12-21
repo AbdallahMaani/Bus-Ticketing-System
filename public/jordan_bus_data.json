@@ -82,14 +82,18 @@
       "city_id": "LOC_AMN",
       "name_en": "Abdali",
       "station_name": "Abdali Bus Station",
-      "street_en": "King Hussein Street (near Abdali area)"
+      "street_en": "King Hussein Street (near Abdali area)",
+      "lat": 31.9670,
+       "lng": 35.9101
     },
     {
       "id": "AREA_AMN_3",
       "city_id": "LOC_AMN",
       "name_en": "Wahdat",
       "station_name": "Wahdat Bus Station (South)",
-      "street_en": "Near Al-Quds Street / South Amman area"
+      "street_en": "Near Al-Quds Street / South Amman area",
+      "lat": 31.9183,
+       "lng": 35.9298
     },
     {
       "id": "AREA_IRD_1",
@@ -105,14 +109,20 @@
       "city_id": "LOC_IRD",
       "name_en": "South",
       "station_name": "South Irbid Bus Station",
-      "street_en": "Near University Street"
+      "street_en": "Near University Street",
+      "lat": 32.5350,
+      "lng": 35.8690
+
     },
     {
       "id": "AREA_IRD_3",
       "city_id": "LOC_IRD",
       "name_en": "Central",
       "station_name": "Central Irbid Bus Terminal",
-      "street_en": "Near Al-Hashimi Street (city center)"
+      "street_en": "Near Al-Hashimi Street (city center)",
+      "lat": 32.5515,
+      "lng": 35.8485
+
     },
     {
       "id": "AREA_ZAR_1",
@@ -343,64 +353,71 @@
       "origin_id": "LOC_AMN",
       "destination_id": "LOC_IRD",
       "distance_km": 88,
-      "duration_hrs": 1.45,
-      "base_price_JOD": 3.5
+      "duration_hrs": 1.45
     },
+    {
+      "route_id": "R191",
+      "origin_id": "LOC_AMN",
+      "destination_id": "LOC_IRD",
+      "distance_km": 91,
+      "duration_hrs": 1.45
+    },
+    {
+      "route_id": "R192",
+      "origin_id": "LOC_AMN",
+      "destination_id": "LOC_IRD",
+      "distance_km": 92,
+      "duration_hrs": 1.45
+    },
+
     {
       "route_id": "R102",
       "origin_id": "LOC_AMN",
       "destination_id": "LOC_ZAR",
       "distance_km": 25,
-      "duration_hrs": 0.5,
-      "base_price_JOD": 1.0
+      "duration_hrs": 0.5
     },
     {
       "route_id": "R103",
       "origin_id": "LOC_AMN",
       "destination_id": "LOC_MAD",
       "distance_km": 30,
-      "duration_hrs": 0.75,
-      "base_price_JOD": 1.5
+      "duration_hrs": 0.75
     },
     {
       "route_id": "R104",
       "origin_id": "LOC_IRD",
       "destination_id": "LOC_AJL",
       "distance_km": 35,
-      "duration_hrs": 1.0,
-      "base_price_JOD": 1.75
+      "duration_hrs": 1.0
     },
     {
       "route_id": "R105",
       "origin_id": "LOC_AMN",
       "destination_id": "LOC_KAR",
       "distance_km": 140,
-      "duration_hrs": 2.5,
-      "base_price_JOD": 4.5
+      "duration_hrs": 2.5
     },
     {
       "route_id": "R106",
       "origin_id": "LOC_MAA",
       "destination_id": "LOC_TFL",
       "distance_km": 90,
-      "duration_hrs": 1.5,
-      "base_price_JOD": 3.0
+      "duration_hrs": 1.5
     },
     {
       "route_id": "R107",
       "origin_id": "LOC_ZAR",
       "destination_id": "LOC_MAF",
       "distance_km": 60,
-      "duration_hrs": 1.0,
-      "base_price_JOD": 2.25
+      "duration_hrs": 1.0
     },
     {
       "route_id": "R108",
       "origin_id": "LOC_MAD",
       "destination_id": "LOC_BAL",
       "distance_km": 45,
-      "duration_hrs": 1.0,
-      "base_price_JOD": 2.0
+      "duration_hrs": 1.0
     }
   ],
   "buses": [
@@ -451,8 +468,28 @@
   ],
   "trips": [
     {
-      "trip_id": "T20251216-101-A",
+      "trip_id": "T20253416-106-A",
       "route_id": "R101",
+      "bus_id": "B2002",
+      "departure_date": "2025-12-20",
+      "departure_time": "09:30",
+      "available_seats": 41,
+      "price_JOD": 3.85,
+      "status": "Scheduled"
+    },
+    {
+      "trip_id": "T20255416-105-M",
+      "route_id": "R191",
+      "bus_id": "B2003",
+      "departure_date": "2025-12-21",
+      "departure_time": "09:00",
+      "available_seats": 19,
+      "price_JOD": 4.0,
+      "status": "Almost Full"
+    },
+    {
+      "trip_id": "T20251216-101-A",
+      "route_id": "R192",
       "bus_id": "B2002",
       "departure_date": "2025-12-16",
       "departure_time": "06:30",

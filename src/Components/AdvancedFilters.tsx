@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Select,
   TextInput,
@@ -13,60 +13,11 @@ import {
   ActionIcon,
   Title,
 } from "@mantine/core";
+import type { Trip } from "./TicketForm";
 
-/*  TYPES  */
 
-type Criteria = {
-  from: string;
-  to: string;
-  date: string;
-  sortBy: string;
-  filters: string[];
-};
-
-export type Trip = {
-  trip_id: string;
-  route_id: string;
-  bus_id: string;
-  departure_date: string;
-  departure_time: string;
-  available_seats: number;
-  price_JOD: number;
-  origin_name?: string;
-  destination_name?: string;
-  features: string[];
-  driver_name: string;
-  rating?: number;
-  area_name?: string;
-  station_name?: string;
-  origin_station?: string;
-  origin_street?: string;
-  destination_station?: string;
-  destination_street?: string;
-  origin_lat?: number;
-  origin_lng?: number;
-  destination_lat?: number;
-  destination_lng?: number;
-};
-
-/*  Component  */
-
-export default function AdvancedFilters({
-  onSearch,
-  onResults,
-  onClose,
-  onReset,
-  currentTrips,
-  onClearMapRoutes,
-}: {
-  onSearch?: (criteria: Criteria) => void;
-  onResults?: (trips: Trip[]) => void;
-  onClose?: () => void;
-  onReset?: () => void;
-  currentTrips: Trip[];
-  onClearMapRoutes?: () => void;
-}) {
-  /*  States  */
+export default function AdvancedFilters({onResults,onClose,onReset,currentTrips,onClearMapRoutes}: {onResults?: (trips: Trip[]) => void;  onClose?: () => void;  onReset?: () => void;  currentTrips: Trip[];  onClearMapRoutes?: () => void; })
+{
   const [date, setDate] = useState("");
   const [sortBy, setSortBy] = useState<string | null>("departure");
   const [filters, setFilters] = useState<string[]>([]);
@@ -79,7 +30,6 @@ export default function AdvancedFilters({
     );
   };
 
-  /* ===== Submit ===== */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setNoResults(false);
@@ -113,16 +63,6 @@ export default function AdvancedFilters({
       setNoResults(true);
     }
 
-    if (onSearch) {
-      onSearch({
-        from: "",
-        to: "",
-        date,
-        sortBy: sortBy || "departure",
-        filters,
-      });
-    }
-
     if (onResults) {
       onResults(enrichedTrips);
     }
@@ -144,28 +84,16 @@ export default function AdvancedFilters({
     setFilters([]);
     setNoResults(false);
 
-    if (onSearch) {
-      onSearch({
-        from: "",
-        to: "",
-        date: "",
-        sortBy: "departure",
-        filters: [],
-      });
-    }
-
-    if (onResults) {
+    // Only restore current trips if we didn't trigger a global reset
+    if (onResults && !onReset) {
       onResults(currentTrips);
     }
   };
 
-  /* ===== Styles ===== */
   const blackTextStyle = {
     label: { color: "black", fontWeight: 500 },
     input: { color: "black" },
   };
-
-  /*  JSX  */
 
   return (
     <Paper

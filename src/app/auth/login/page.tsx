@@ -1,5 +1,6 @@
-"use client";
-
+"use client"; 
+// in next js, this directive indicates that the file should be treated as a client-side component instead of a server-side component 
+// use client components can use hooks like useState and useEffect and can access browser APIs like localStorage and window
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -25,17 +26,17 @@ interface User {
   phone: string;
   role: "customer" | "admin";
   balance: number;
-}
+} // user as a TypeScript interface defining the structure of a user object like class in other languages or struct in c/c++
 
 function LoginPage() {
-  const router = useRouter();
+  const router = useRouter(); //use router in next 
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+  const handleSubmit = async (e: React.FormEvent) => { // e is the event object passed to the event handler
+    e.preventDefault(); // prevent default behavior of form submission which is to reload the page
+    setError(""); // clear previous errors
 
     try {
       const response = await fetch("/jordan_bus_data.json");
@@ -49,7 +50,7 @@ function LoginPage() {
         (u: User) =>
           (u.username === identifier || u.email === identifier) && //identifier is either username or email 
           u.password === password
-      );
+      ); // this will iterate through the users array and return the first user that matches the identifier and password that were input by the user
 
       if (user) {
         // ✅ FIX: Save user to localStorage to persist "session"
@@ -63,7 +64,7 @@ function LoginPage() {
       } else {
         setError("Invalid username/email or password.");
       }
-    } catch (err) {
+    } catch (err) { //err here is a general error object // could be network error or JSON parsing error
       setError("System error: Could not connect to data source.");
     }
   };

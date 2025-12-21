@@ -1,19 +1,14 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import {
   Select,
-  Button,
-  Group,
   Title,
   Paper,
   Stack,
   Text,
 } from "@mantine/core";
 
-/*  TYPES  */
-
-type Criteria = {
+export type Criteria = {
   from: string;
   to: string;
   date: string;
@@ -26,10 +21,12 @@ type CityOption = {
   label: string;
 };
 
-type Route = {
+export type Route = {
   route_id: string;
   origin_id: string;
   destination_id: string;
+  distance_km : number;
+  duration_hrs: number;
 };
 
 type Bus = {
@@ -39,7 +36,7 @@ type Bus = {
   driver_name: string;
 };
 
-type Areas = {
+export type Areas = {
   id: string;
   city_id: string;
   name_en: string;
@@ -49,12 +46,14 @@ type Areas = {
   lng?: number;
 };
 
-export type Trip = {
+export type Trip = { //ticket
   trip_id: string;
   route_id: string;
   bus_id: string;
   departure_date: string;
   departure_time: string;
+  distance_km?: number; // Add distance_km to Trip type
+  duration_hrs?: number; // Add duration_hrs to Trip type
   available_seats: number;
   price_JOD: number;
   origin_name?: string;
@@ -72,35 +71,21 @@ export type Trip = {
   origin_lng?: number;
   destination_lat?: number;
   destination_lng?: number;
-};
+}; // types are in general used to define the shape of data objects and ensure type safety in TypeScript applications
+// export type in general used to make types available for import in other files
 
-/*  Component  */
-
-export default function TicketForm({
-  onSearch,
-  onResults,
-  onReset,
-  resetKey,
-}: {
-  onSearch?: (criteria: Criteria) => void;
-  onResults?: (trips: Trip[]) => void;
-  onReset?: () => void;
-  resetKey?: number;
-}) {
-  /*  States  */
+export default function TicketForm({ onResults, onReset, resetKey, from, setFrom, to, setTo }: {onResults?: (trips: Trip[]) => void; onReset?: () => void; resetKey?: number; from: string | null; setFrom: (value: string | null) => void; to: string | null; setTo: (value: string | null) => void; }) 
+{
   const [cityOptions, setCityOptions] = useState<CityOption[]>([]);
   const [routes, setRoutes] = useState<Route[]>([]);
   const [buses, setBuses] = useState<Bus[]>([]);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [areas, setAreas] = useState<Areas[]>([]);
-
-  const [from, setFrom] = useState<string | null>("");
-  const [to, setTo] = useState<string | null>("");
   const [noResults, setNoResults] = useState(false);
 
-  /*  Fetch JSON  */
+
   useEffect(() => {
-    const fetchBusData = async () => {
+    const fetchData = async () => {
       try {
         const res = await fetch("/jordan_bus_data.json");
 
@@ -109,15 +94,15 @@ export default function TicketForm({
           return;
         }
 
-        const data = await res.json();
-        console.log("✅ JSON loaded successfully:", data);
+        const data = await res.json(); //res is the response object returned by the fetch function when making an HTTP request to retrieve data from a specified URL. The await res.json() line is used to parse the response body as JSON format asynchronously.
 
         // Cities
-        if (Array.isArray(data.cities)) {
-          setCityOptions(
-            data.cities.map((city: any) => ({
-              value: city.id,
-              label: city.name_en,
+        if (Array.isArray(data.cities)) { //Array is an object and .isArray is a method that checks if the provided value is an array. Here, it ensures that data.cities is indeed an array before proceeding to map over it.
+          // Populate cityOptions from areas to allow selection of specific locations
+          setCityOptions( // Map cities to CityOption format
+            data.cities.map((city: { id: string; name_en: string }) => ({
+              value: city.id, // Use city ID as the value
+              label: city.name_en, // Use city name as the label
             }))
           );
         }
@@ -135,7 +120,7 @@ export default function TicketForm({
       }
     };
 
-    fetchBusData();
+    fetchData();
   }, []);
 
   /* perform a search when both from and to are selected */
@@ -143,44 +128,77 @@ export default function TicketForm({
     const performSearch = () => {
       if (!from || !to) return;
 
+      // Get the full city objects for the selected 'from' and 'to' city IDs
+      const selectedFromCity = cityOptions.find(c => c.value === from);
+      const selectedToCity = cityOptions.find(c => c.value === to);
+
+      if (!selectedFromCity || !selectedToCity) {
+        setNoResults(true); // This case should ideally not happen if 'from' and 'to' are valid city IDs
+        if (onResults) onResults([]); // Clear results if cities are not found
+        return;
+      }
+
+      // Use the selected city IDs to match routes
+      const fromCityId = from; // 'from' is now a prop
+      const toCityId = to;     // 'to' is now a prop
+
       // 1️⃣ Match routes
       const matchedRoutes = routes.filter(
-        (r) => r.origin_id === from && r.destination_id === to
+        (r) => r.origin_id === fromCityId && r.destination_id === toCityId
       );
 
       // 2️⃣ Filter trips by route
-      let filteredTrips = trips.filter((t) =>
+      const filteredTrips = trips.filter((t) =>
         matchedRoutes.some((r) => r.route_id === t.route_id)
       );
 
-      // Enrich trips with city names
+      // 3️⃣ Enrich trips with specific area details, applying overrides for R191 and R192
       const enrichedTrips = filteredTrips.map((trip) => {
         const route = routes.find((r) => r.route_id === trip.route_id);
-        const origin = cityOptions.find((c) => c.value === route?.origin_id)
-          ?.label;
-        const destination = cityOptions.find(
-          (c) => c.value === route?.destination_id
-        )?.label;
+        if (!route) return trip; // Should not happen if filteredTrips are valid
 
-        const originArea = areas.find((a) => a.city_id === route?.origin_id);
-        const destArea = areas.find((a) => a.city_id === route?.destination_id);
+        // Determine the default origin and destination areas based on the route's city IDs
+        let tripOriginArea = areas.find(a => a.city_id === route.origin_id);
+        const tripDestinationArea = areas.find(a => a.city_id === route.destination_id);
+
+        // Apply specific overrides for R191 and R192 if the origin city is Amman
+        if (route.origin_id === "LOC_AMN") {
+          if (trip.route_id === "R191") {
+            // Force origin to Abdali (AREA_AMN_2) for R191
+            tripOriginArea = areas.find(a => a.id === "AREA_AMN_2") || tripOriginArea;
+          } else if (trip.route_id === "R192") {
+            // Force origin to Wahdat (AREA_AMN_3) for R192
+            tripOriginArea = areas.find(a => a.id === "AREA_AMN_3") || tripOriginArea;
+          }
+        }
+
+        // If we still can't find areas (e.g., city has no defined areas), return original trip
+        if (!tripOriginArea || !tripDestinationArea) return trip;
+
+        // Apply specific rules for R191 and R192 if their origin city is Amman
+
+        // Use the selected city names for origin_name and destination_name
+        const originLabel = selectedFromCity.label;
+        const destinationLabel = selectedToCity.label;
 
         return {
           ...trip,
-          origin_name: origin,
-          destination_name: destination,
+          origin_name: originLabel,
+          destination_name: destinationLabel,
           rating: buses.find((b) => b.bus_id === trip.bus_id)?.rating || 0,
           features: buses.find((b) => b.bus_id === trip.bus_id)?.features || [],
           driver_name:
             buses.find((b) => b.bus_id === trip.bus_id)?.driver_name || "",
-          origin_station: originArea?.station_name,
-          origin_street: originArea?.street_en,
-          origin_lat: originArea?.lat,
-          origin_lng: originArea?.lng,
-          destination_station: destArea?.station_name,
-          destination_street: destArea?.street_en,
-          destination_lat: destArea?.lat,
-          destination_lng: destArea?.lng,
+          origin_station: tripOriginArea.station_name,
+          origin_street: tripOriginArea.street_en,
+          origin_lat: tripOriginArea.lat,
+          origin_lng: tripOriginArea.lng,
+          distance_km: route.distance_km, // Add distance from route
+          duration_hrs: route.duration_hrs, // Add duration from route
+          destination_station: tripDestinationArea.station_name,
+          destination_street: tripDestinationArea.street_en,
+          destination_lat: tripDestinationArea.lat,
+          destination_lng: tripDestinationArea.lng,
         };
       });
 
@@ -190,15 +208,7 @@ export default function TicketForm({
         setNoResults(false);
       }
 
-      if (onSearch) {
-        onSearch({
-          from: from || "",
-          to: to || "",
-          date: "",
-          sortBy: "departure",
-          filters: [],
-        });
-      }
+      
 
       if (onResults) {
         onResults(enrichedTrips);
@@ -206,8 +216,8 @@ export default function TicketForm({
     };
 
     performSearch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [from, to]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/rules-of-hooks
+  }, [from, to, areas, routes, trips, buses, cityOptions]);
 
   /* reset when parent requests it */
   useEffect(() => {
@@ -217,17 +227,15 @@ export default function TicketForm({
     setTo(null);
     setNoResults(false);
     // notify parent if needed
-    if (onReset) onReset();
+    if (onReset) onReset(); // 'onReset' is a prop
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resetKey]);
+  }, [resetKey]); // we use resetKey as a simple counter that increments and trigger the useEffect when parent wants to reset
 
   /* ===== Styles ===== */
   const blackTextStyle = {
     label: { color: "black", fontWeight: 500 },
     input: { color: "black" },
   };
-
-  /*  JSX  */
 
   return (
     <Paper
@@ -242,12 +250,11 @@ export default function TicketForm({
         height: "fit-content",
         zIndex: 10,
       }}
-    >
+      >
       <Stack gap="md">
         <Title order={3} style={{ color: "#222" }} ta="center">
           Find your trip
         </Title>
-
         <Select
           label="From"
           placeholder="Pick origin"
@@ -259,7 +266,6 @@ export default function TicketForm({
           styles={blackTextStyle}
           radius="md"
         />
-
         <Select
           label="To"
           placeholder="Pick destination"
@@ -271,8 +277,6 @@ export default function TicketForm({
           styles={blackTextStyle}
           radius="md"
         />
-
-
         {noResults && (
           <Text size="sm" c="red" ta="center" fw={500}>
             Sorry, no trips found matching your criteria.
