@@ -7,7 +7,7 @@ import Footer from "../Components/Footer";
 import TicketForm, { Trip } from "../Components/TicketForm";
 import TicketsResults from "@/Components/TicketsResults";
 import BusMap, { BusMapRef } from "@/Components/BusMap";
-import AdvancedFilters from "@/Components/AdvancedFilters";
+import AdvancedFilters from "@/Components/AdvancedFilters"; // Keep AdvancedFilters import
 import { Areas } from "@/Components/TicketForm"; // Import Areas type
 
 export default function Home() {
@@ -95,14 +95,20 @@ export default function Home() {
   };
 
   return (
-    <Box
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        minHeight: "100vh",
-        width: "100%",
-      }}
-    >
+    // MantineProvider and ColorSchemeScript are removed as dark mode is removed
+    // If you need MantineProvider for other reasons (e.g., custom theme, notifications),
+    // you can re-add it without colorScheme props.
+    // For now, assuming it's only for color scheme.
+    <>
+      <Box
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          minHeight: "100vh",
+          width: "100%",
+          backgroundColor: '#f8f9fa', // Hardcoded light background
+        }}
+      >
       <Header />
 
       <Box
@@ -116,18 +122,18 @@ export default function Home() {
       >
         <Flex
           direction={{ base: "column", lg: "row" }}
-          h={{ base: "auto", lg: "calc(100vh - 120px)" }}
+          h={{ base: "auto", lg: "calc(100vh - 120px)" }} // Assuming header/footer take 120px
           mih={{ base: "auto", lg: 600 }}
           w="100%"
         >
           {/* Left sidebar - Fixed 25% width */}
           <Box
             w={{ base: "100%", lg: "23%" }}
-            bg="#f8f9fa"
+            bg="#f8f9fa" // Hardcoded light background
             p={{ base: "1rem", lg: "1.5rem" }}
             style={{
-              borderRight: "1px solid #e9ecef",
-              borderBottom: "1px solid #e9ecef",
+              borderRight: "1px solid #e9ecef", // Hardcoded border
+              borderBottom: "1px solid #e9ecef", // Hardcoded border
               overflowY: "auto",
               boxShadow: "2px 0 5px rgba(0, 0, 0, 0.05)",
             }}
@@ -140,20 +146,20 @@ export default function Home() {
           {/* Right content area - Fixed 75% width */}
           <Box
             w={{ base: "100%", lg: "77%" }}
-            bg="white"
+            bg="white" // Hardcoded light background
             p={{ base: "1rem", lg: "1rem" }}
             mih={{ base: 400, lg: 0 }}
             style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              borderBottom: "1px solid #e9ecef",
+              borderBottom: "1px solid #e9ecef", // Hardcoded border
             }}
           >
             <Box
               w="100%"
               h="100%"
-              bg="#f8f9fa"
+              bg="#f8f9fa" // Hardcoded light background
               p=".1rem"
               style={{
                 border: "2px dashed #dee2e6",
@@ -163,11 +169,11 @@ export default function Home() {
                 alignItems: "center",
                 justifyContent: "center",
                 textAlign: "center",
-                color: "#666",
+                color: "#666", // Hardcoded color
                 position: "relative",
               }}
             >
-              <BusMap ref={mapRef} trips={trips} allAreas={allAreas} fromCityId={fromCity} toCityId={toCity} />
+              <BusMap ref={mapRef} allAreas={allAreas} fromCityId={fromCity} toCityId={toCity} />
               {!showAdvancedFilters && (
                 <ActionIcon
                   variant="filled"
@@ -222,6 +228,7 @@ export default function Home() {
       </Box>
 
       <Footer />
-    </Box>
+      </Box>
+    </>
   );
 }

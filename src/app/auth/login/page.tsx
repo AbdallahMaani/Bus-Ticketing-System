@@ -64,6 +64,7 @@ function LoginPage() {
       } else {
         setError("Invalid username/email or password.");
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) { //err here is a general error object // could be network error or JSON parsing error
       setError("System error: Could not connect to data source.");
     }
@@ -122,7 +123,7 @@ function LoginPage() {
               label="Password"
               placeholder="Your password"
               required
-              value={password}
+              value={password} 
               onChange={(e) => setPassword(e.target.value)}
               styles={{ input: { color: "black" }, label: { color: "black" } }}
               radius="md"

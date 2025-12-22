@@ -637,7 +637,7 @@
       "password": "password123",
       "phone": "+962791234567",
       "role": "customer",
-      "balance": 25.0
+      "balance": 525.0
     },
     {
       "user_id": "U1002",
@@ -647,7 +647,7 @@
       "password": "securepass",
       "phone": "+962771234567",
       "role": "customer",
-      "balance": 8.5
+      "balance": 918.5
     },
     {
       "user_id": "A9001",
@@ -657,7 +657,7 @@
       "password": "admin",
       "phone": "+962781234567",
       "role": "admin",
-      "balance": 0.0
+      "balance": 1000.0
     }
   ],
   "bookings": [

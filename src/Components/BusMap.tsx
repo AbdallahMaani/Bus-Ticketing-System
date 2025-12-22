@@ -12,16 +12,7 @@ export interface BusMapRef {
   clearRoutes: () => void;
 }
 
-interface RouteFeature { // Define the structure of a route feature to replace any word
-  type: "Feature";
-  geometry: {
-    type: "LineString";
-    coordinates: number[][];
-  };
-  properties: Record<string, unknown>;
-}
-
-const BusMap = forwardRef<BusMapRef, { trips: Trip[]; allAreas: Areas[]; fromCityId: string | null; toCityId: string | null }>(({ trips, allAreas, fromCityId, toCityId }, ref) => {
+const BusMap = forwardRef<BusMapRef, { allAreas: Areas[]; fromCityId: string | null; toCityId: string | null }>(({ allAreas, fromCityId, toCityId }, ref) => {
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
@@ -160,11 +151,11 @@ const BusMap = forwardRef<BusMapRef, { trips: Trip[]; allAreas: Areas[]; fromCit
       if (area.lat && area.lng) { // Ensure coordinates exist
         // Construct details for the popup
         const details = `<strong>${area.name_en}</strong><br>Station: ${area.station_name}<br>Street: ${area.street_en}`; 
-        
+
         // Create the popup instance
         const popup = new maplibregl.Popup({
-          closeButton: false, // Hide the close button for hover popups
-          closeOnClick: false, // Prevent the popup from closing when the map is clicked
+          closeButton: true, // Show the close button for click popups
+          closeOnClick: true, // Allow the popup to close when the map is clicked
           offset: 25, // Offset the popup from the marker
         }).setHTML(details);
 
@@ -176,11 +167,8 @@ const BusMap = forwardRef<BusMapRef, { trips: Trip[]; allAreas: Areas[]; fromCit
         // Get the marker's DOM element to attach event listeners
         const markerElement = marker.getElement();
 
-        // Show popup on mouse enter
-        markerElement.addEventListener('mouseenter', () => popup.addTo(map));
-
-        // Hide popup on mouse leave
-        markerElement.addEventListener('mouseleave', () => popup.remove());
+        // Show popup on click
+        markerElement.addEventListener('click', () => popup.addTo(map));
 
       markersRef.current.push(marker);
       }

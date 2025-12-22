@@ -11,9 +11,9 @@ import {
   Center,
   Title,
 } from "@mantine/core";
+import { Transition } from '@mantine/core'; // Import Transition
 import { useRouter } from "next/navigation";
 import type { Trip } from "./TicketForm";
-import type { Route } from "./TicketForm";
 import Booking from "./Booking";
 
 export default function TicketsResults({ trips, onShowOnMap, balance, onBook }: { trips: Trip[]; onShowOnMap?: (trip: Trip) => void; balance: number; onBook: (price: number) => void }) {
@@ -63,7 +63,9 @@ export default function TicketsResults({ trips, onShowOnMap, balance, onBook }: 
       {trips.map((trip) => {
         const isExpanded = expandedTripIds.includes(trip.trip_id);
         return (
-          <Paper key={trip.trip_id} shadow="md" p="lg" withBorder radius="lg">
+          <Transition mounted={true} transition="fade" duration={400} key={trip.trip_id}>
+            {(styles) => (
+              <Paper shadow="md" p="lg" withBorder radius="lg" style={styles}>
             <Group justify="center" align="center" gap="xl">
               <Stack align="center" gap={5}>
                 <Group justify="center" mb={5}>
@@ -147,8 +149,10 @@ export default function TicketsResults({ trips, onShowOnMap, balance, onBook }: 
                   )}
                 </Table.Tbody>
               </Table>
-            </Collapse>
-          </Paper>
+              </Collapse>
+              </Paper>
+            )}
+          </Transition>
         );
       })}
       <Booking

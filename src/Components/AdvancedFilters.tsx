@@ -100,7 +100,7 @@ export default function AdvancedFilters({onResults,onClose,onReset,currentTrips,
       component="form"
       p="1.5rem"
       radius={20}
-      bg="rgba(240, 240, 240, 0.45)"
+      bg="rgba(240, 240, 240, 0.45)" // Hardcoded light background with transparency
       shadow="xl"
       style={{ backdropFilter: "blur(20px)" }}
     >

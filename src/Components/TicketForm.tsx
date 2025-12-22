@@ -216,10 +216,10 @@ export default function TicketForm({ onResults, onReset, resetKey, from, setFrom
     };
 
     performSearch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/rules-of-hooks
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [from, to, areas, routes, trips, buses, cityOptions]);
 
-  /* reset when parent requests it */
+  /* reset when parent requests it  the parent is page.tsx */
   useEffect(() => {
     if (resetKey === undefined) return;
     // clear local state
