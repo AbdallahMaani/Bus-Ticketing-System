@@ -30,6 +30,7 @@ interface TicketRecord {
   to: string;
   price: number;
   quantity: number;
+  total?: number;
   status: 'Confirmed' | 'Cancelled';
 }
 
@@ -107,7 +108,7 @@ export default function HistoryPage() {
     return () => window.removeEventListener('ticketAdded', handler as EventListener);
   }, []);
 
-  const totalSpent = tickets.reduce((sum, t) => sum + t.price * t.quantity, 0);
+  const totalSpent = tickets.reduce((sum, t) => sum + (t.total ?? t.price * t.quantity), 0);
 
   const totalTrips = tickets.length;
   const lastTrip = tickets.length ? tickets[0].date : null;
@@ -135,7 +136,7 @@ export default function HistoryPage() {
       <Table.Td ta="center">{ticket.price.toFixed(2)} JOD</Table.Td>
       <Table.Td ta="center">{ticket.quantity}</Table.Td>
       <Table.Td ta="center">
-        {(ticket.price * ticket.quantity).toFixed(2)} JOD
+        {( (ticket.total ?? (ticket.price * ticket.quantity)) ).toFixed(2)} JOD
       </Table.Td>
 
       <Table.Td ta="center">
@@ -164,12 +165,12 @@ export default function HistoryPage() {
       <Box component="main" style={{ flex: 1, padding: '2rem' }}>
         <Container fluid>
           <Stack gap="lg">
-=            <Stack align="center" gap="xs">
+          <Stack align="center" gap="xs">
               <Title order={2}>My Ticket History</Title>
               <Text c="dimmed" size="md">Past trips, and bookings.</Text>
             </Stack>
 
-=            <Center>
+            <Center>
               <Card shadow="lg" radius="lg" withBorder miw={300}> {/* Added miw for minimum width */}
                 <Stack gap={4} align="center"> 
                   <Text size="xs" c="dimmed">Total spent</Text>
@@ -197,7 +198,6 @@ export default function HistoryPage() {
                   <Table
                     striped
                     highlightOnHover
-                    withTableBorder
                     withColumnBorders
                     miw={700}
                     verticalSpacing="sm"
@@ -220,8 +220,7 @@ export default function HistoryPage() {
               </ScrollArea>
             </Paper>
             <Group justify="center" mt="md">
-              <Button variant="default" radius="md">Filter</Button>
-              <Button radius="md">Search History</Button>
+              <Button radius="md">Filter</Button>
             </Group>
           </Stack>
         </Container>
