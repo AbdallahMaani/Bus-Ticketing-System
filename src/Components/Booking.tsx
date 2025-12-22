@@ -23,7 +23,7 @@ function Booking({ opened, onClose, trip, balance, onBook }: BookingProps) {
   const [quantity, setQuantity] = useState<number>(1);
 
   if (!trip) return null;
-  const maxAvailable = Math.max(0, trip.available_seats ?? 0);
+  const maxAvailable = Math.max(0, trip.available_seats ?? 0); // trip.available_seats ?? 0 this means if trip.available_seats is null or undefined, use 0 instead
   const totalPrice = Number((quantity * trip.price_JOD).toFixed(2));
 
   const handleConfirm = () => {
@@ -51,13 +51,14 @@ function Booking({ opened, onClose, trip, balance, onBook }: BookingProps) {
         status: 'Confirmed',
       } as const;
 
-      // persist the ticket to localStorage
+      // temp code to save the ticket in localStorage
       try {
         const key = 'ticketHistory'; 
-        const existing = typeof window !== 'undefined' ? localStorage.getItem(key) : null;
-        const arr = existing ? JSON.parse(existing) : [];
-        arr.unshift(newTicket); // unshift method is a way to add an element to the beginning of an array
-        if (typeof window !== 'undefined') localStorage.setItem(key, JSON.stringify(arr));
+        const existing = typeof window !== 'undefined' ? localStorage.getItem(key) : null; // only on client side CSR
+        const arr = existing ? JSON.parse(existing) : []; // get tickets from the localStorage
+        arr.unshift(newTicket); // we add the new ticket to the arr (index [0]) using shift method
+        if (typeof window !== 'undefined') localStorage.setItem(key, JSON.stringify(arr)); 
+        // check if we are in Client side and save the itcket in the localStorage
 
         // emit custom event so history page can update immediately
         if (typeof window !== 'undefined') {
@@ -68,12 +69,8 @@ function Booking({ opened, onClose, trip, balance, onBook }: BookingProps) {
       }
 
       onBook(totalPrice);
-      notifications.show({
-        title: 'Booking Successful!',
-        message: `You have booked ${quantity} ticket${quantity > 1 ? 's' : ''} from ${trip.origin_name} to ${trip.destination_name}. Amount deducted: ${totalPrice.toFixed(2)} JOD`,
-        color: 'green',
-      });
-      onClose();
+      onClose(); 
+
     } else {
       notifications.show({
         title: 'Insufficient Balance',
@@ -84,7 +81,7 @@ function Booking({ opened, onClose, trip, balance, onBook }: BookingProps) {
   };
 
   return (
-    <Modal opened={opened} onClose={onClose} title="Confirm Booking" centered radius="lg">
+    <Modal opened={opened} onClose={onClose} title="Confirm Booking" centered radius="lg"> 
       <Stack>
         <Text fw={700} size="lg">
           {trip.origin_name} → {trip.destination_name}
@@ -97,7 +94,7 @@ function Booking({ opened, onClose, trip, balance, onBook }: BookingProps) {
           min={1}
           max={maxAvailable}
           value={quantity}
-          onChange={(v) => setQuantity(v ?? 1)}
+          onChange={(v) => setQuantity(v ?? 1)} // (v ?? 1) means if the value (quantity) is null or undefined, use 1 instead
           styles={{ input: { width: 120 } }}
           radius="md"
         />

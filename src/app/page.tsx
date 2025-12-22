@@ -80,7 +80,10 @@ export default function Home() {
     }
   };
 
-  const handleBook = (price: number) => {
+  const handleBook = (price: number) => { // checks the balance and deducts the price
+    if(balance < price) {
+      return;
+    }
     setBalance(prev => {
       const newBalance = prev - price;
       // Update localStorage if user is logged in
@@ -106,7 +109,7 @@ export default function Home() {
           flexDirection: "column",
           minHeight: "100vh",
           width: "100%",
-          backgroundColor: '#f8f9fa', // Hardcoded light background
+          backgroundColor: '#f8f9fa', 
         }}
       >
       <Header />
@@ -122,18 +125,17 @@ export default function Home() {
       >
         <Flex
           direction={{ base: "column", lg: "row" }}
-          h={{ base: "auto", lg: "calc(100vh - 120px)" }} // Assuming header/footer take 120px
+          h={{ base: "auto", lg: "calc(100vh - 120px)" }} 
           mih={{ base: "auto", lg: 600 }}
           w="100%"
         >
-          {/* Left sidebar - Fixed 25% width */}
           <Box
             w={{ base: "100%", lg: "23%" }}
-            bg="#f8f9fa" // Hardcoded light background
+            bg="#f8f9fa" 
             p={{ base: "1rem", lg: "1.5rem" }}
             style={{
-              borderRight: "1px solid #e9ecef", // Hardcoded border
-              borderBottom: "1px solid #e9ecef", // Hardcoded border
+              borderRight: "1px solid #e9ecef", 
+              borderBottom: "1px solid #e9ecef", 
               overflowY: "auto",
               boxShadow: "2px 0 5px rgba(0, 0, 0, 0.05)",
             }}
@@ -143,23 +145,23 @@ export default function Home() {
               <TicketsResults trips={trips} onShowOnMap={handleShowOnMap} balance={balance} onBook={handleBook} />
             </div>
           </Box>
-          {/* Right content area - Fixed 75% width */}
+          
           <Box
             w={{ base: "100%", lg: "77%" }}
-            bg="white" // Hardcoded light background
+            bg="white" 
             p={{ base: "1rem", lg: "1rem" }}
             mih={{ base: 400, lg: 0 }}
             style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              borderBottom: "1px solid #e9ecef", // Hardcoded border
+              borderBottom: "1px solid #e9ecef",
             }}
           >
             <Box
               w="100%"
               h="100%"
-              bg="#f8f9fa" // Hardcoded light background
+              bg="#f8f9fa" 
               p=".1rem"
               style={{
                 border: "2px dashed #dee2e6",
@@ -169,7 +171,7 @@ export default function Home() {
                 alignItems: "center",
                 justifyContent: "center",
                 textAlign: "center",
-                color: "#666", // Hardcoded color
+                color: "#666", 
                 position: "relative",
               }}
             >

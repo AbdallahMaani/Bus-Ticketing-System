@@ -34,7 +34,7 @@ interface TicketRecord {
   status: 'Confirmed' | 'Cancelled';
 }
 
-const mockTickets: TicketRecord[] = [
+const mockTickets: TicketRecord[] = [ //dummy data 
   {
     id: 'TKT_001',
     date: '2025-12-15',
@@ -93,11 +93,11 @@ export default function HistoryPage() {
     // listen for newly added tickets from Booking component
     const handler = (e: Event) => {
       try {
-        const detail = (e as CustomEvent).detail as TicketRecord;
+        const detail = (e as CustomEvent).detail as TicketRecord; // get the new ticket from event detail from booking component
         setTickets((prev) => {
-          const updated = [detail, ...prev];
+          const updated = [detail, ...prev]; // add the new ticket to the beginning of the array
           try {
-            localStorage.setItem('ticketHistory', JSON.stringify(updated));
+            localStorage.setItem('ticketHistory', JSON.stringify(updated)); // update localStorage
           } catch (err) {}
           return updated;
         });
@@ -108,7 +108,7 @@ export default function HistoryPage() {
     return () => window.removeEventListener('ticketAdded', handler as EventListener);
   }, []);
 
-  const totalSpent = tickets.reduce((sum, t) => sum + (t.total ?? t.price * t.quantity), 0);
+  const totalSpent = tickets.reduce((sum, t) => sum + (t.total ?? t.price * t.quantity), 0); // the ?? operator means if t.total is null or undefined, use (t.price * t.quantity) instead
 
   const totalTrips = tickets.length;
   const lastTrip = tickets.length ? tickets[0].date : null;
@@ -191,7 +191,6 @@ export default function HistoryPage() {
                   <Center mih={200}>
                     <Stack align="center">
                       <Text c="dimmed">No tickets found.</Text>
-                      <Button>Search trips</Button>
                     </Stack>
                   </Center>
                 ) : (
