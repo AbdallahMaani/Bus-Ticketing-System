@@ -85,7 +85,7 @@ export default function HistoryPage() {
 
   const rows = mockTickets.map((ticket) => (
     <Table.Tr key={ticket.id}>
-      <Table.Td> {/* Removed ta="center" to align with Avatar/Text group */}
+      <Table.Td ta="center"> 
         <Group gap="sm" wrap="nowrap">
           <Avatar color="blue" radius="sm">
             🚌
@@ -109,7 +109,7 @@ export default function HistoryPage() {
         {(ticket.price * ticket.quantity).toFixed(2)} JOD
       </Table.Td>
 
-      <Table.Td>
+      <Table.Td ta="center">
         <Badge
           color={ticket.status === 'Confirmed' ? 'green' : 'red'}
           variant="light"

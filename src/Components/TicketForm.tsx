@@ -46,14 +46,14 @@ export type Areas = {
   lng?: number;
 };
 
-export type Trip = { //ticket
+export type Trip = { 
   trip_id: string;
   route_id: string;
   bus_id: string;
   departure_date: string;
   departure_time: string;
-  distance_km?: number; // Add distance_km to Trip type
-  duration_hrs?: number; // Add duration_hrs to Trip type
+  distance_km?: number; 
+  duration_hrs?: number; 
   available_seats: number;
   price_JOD: number;
   origin_name?: string;
@@ -94,7 +94,7 @@ export default function TicketForm({ onResults, onReset, resetKey, from, setFrom
           return;
         }
 
-        const data = await res.json(); //res is the response object returned by the fetch function when making an HTTP request to retrieve data from a specified URL. The await res.json() line is used to parse the response body as JSON format asynchronously.
+        const data = await res.json(); 
 
         // Cities
         if (Array.isArray(data.cities)) { //Array is an object and .isArray is a method that checks if the provided value is an array. Here, it ensures that data.cities is indeed an array before proceeding to map over it.
@@ -123,18 +123,18 @@ export default function TicketForm({ onResults, onReset, resetKey, from, setFrom
     fetchData();
   }, []);
 
-  /* perform a search when both from and to are selected */
+
   useEffect(() => {
     const performSearch = () => {
       if (!from || !to) return;
 
-      // Get the full city objects for the selected 'from' and 'to' city IDs
+    
       const selectedFromCity = cityOptions.find(c => c.value === from);
       const selectedToCity = cityOptions.find(c => c.value === to);
 
       if (!selectedFromCity || !selectedToCity) {
-        setNoResults(true); // This case should ideally not happen if 'from' and 'to' are valid city IDs
-        if (onResults) onResults([]); // Clear results if cities are not found
+        setNoResults(true);
+        if (onResults) onResults([]); 
         return;
       }
 
@@ -142,17 +142,16 @@ export default function TicketForm({ onResults, onReset, resetKey, from, setFrom
       const fromCityId = from; // 'from' is now a prop
       const toCityId = to;     // 'to' is now a prop
 
-      // 1️⃣ Match routes
+      
       const matchedRoutes = routes.filter(
         (r) => r.origin_id === fromCityId && r.destination_id === toCityId
       );
 
-      // 2️⃣ Filter trips by route
       const filteredTrips = trips.filter((t) =>
         matchedRoutes.some((r) => r.route_id === t.route_id)
       );
 
-      // 3️⃣ Enrich trips with specific area details, applying overrides for R191 and R192
+     // static data for testing
       const enrichedTrips = filteredTrips.map((trip) => {
         const route = routes.find((r) => r.route_id === trip.route_id);
         if (!route) return trip; // Should not happen if filteredTrips are valid
@@ -164,10 +163,9 @@ export default function TicketForm({ onResults, onReset, resetKey, from, setFrom
         // Apply specific overrides for R191 and R192 if the origin city is Amman
         if (route.origin_id === "LOC_AMN") {
           if (trip.route_id === "R191") {
-            // Force origin to Abdali (AREA_AMN_2) for R191
+           
             tripOriginArea = areas.find(a => a.id === "AREA_AMN_2") || tripOriginArea;
           } else if (trip.route_id === "R192") {
-            // Force origin to Wahdat (AREA_AMN_3) for R192
             tripOriginArea = areas.find(a => a.id === "AREA_AMN_3") || tripOriginArea;
           }
         }
@@ -175,9 +173,8 @@ export default function TicketForm({ onResults, onReset, resetKey, from, setFrom
         // If we still can't find areas (e.g., city has no defined areas), return original trip
         if (!tripOriginArea || !tripDestinationArea) return trip;
 
-        // Apply specific rules for R191 and R192 if their origin city is Amman
+      
 
-        // Use the selected city names for origin_name and destination_name
         const originLabel = selectedFromCity.label;
         const destinationLabel = selectedToCity.label;
 
