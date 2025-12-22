@@ -93,7 +93,7 @@ export default function HistoryPage() {
     // listen for newly added tickets from Booking component
     const handler = (e: Event) => {
       try {
-        const detail = (e as CustomEvent).detail as TicketRecord; // get the new ticket from event detail from booking component
+        const detail = (e as CustomEvent).detail as TicketRecord; // get the new ticket from from booking component using event 
         setTickets((prev) => {
           const updated = [detail, ...prev]; // add the new ticket to the beginning of the array
           try {
@@ -104,7 +104,7 @@ export default function HistoryPage() {
       } catch (err) {}
     };
 
-    window.addEventListener('ticketAdded', handler as EventListener);
+    window.addEventListener('ticketAdded', handler as EventListener); // listen for the custom event ( ticketAdded )
     return () => window.removeEventListener('ticketAdded', handler as EventListener);
   }, []);
 
