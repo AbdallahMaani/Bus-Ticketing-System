@@ -190,8 +190,8 @@ export default function TicketForm({ onResults, onReset, resetKey, from, setFrom
           origin_street: tripOriginArea.street_en,
           origin_lat: tripOriginArea.lat,
           origin_lng: tripOriginArea.lng,
-          distance_km: route.distance_km, // Add distance from route
-          duration_hrs: route.duration_hrs, // Add duration from route
+          distance_km: route.distance_km,
+          duration_hrs: route.duration_hrs, 
           destination_station: tripDestinationArea.station_name,
           destination_street: tripDestinationArea.street_en,
           destination_lat: tripDestinationArea.lat,
@@ -219,7 +219,7 @@ export default function TicketForm({ onResults, onReset, resetKey, from, setFrom
   /* reset when parent requests it  the parent is page.tsx */
   useEffect(() => {
     if (resetKey === undefined) return;
-    // clear local state
+
     setFrom(null);
     setTo(null);
     setNoResults(false);
@@ -228,7 +228,7 @@ export default function TicketForm({ onResults, onReset, resetKey, from, setFrom
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetKey]); // we use resetKey as a simple counter that increments and trigger the useEffect when parent wants to reset
 
-  /* ===== Styles ===== */
+  
   const blackTextStyle = {
     label: { color: "black", fontWeight: 500 },
     input: { color: "black" },

@@ -23,6 +23,34 @@ function Booking({ opened, onClose, trip, balance, onBook }: BookingProps) {
 
   const handleConfirm = () => {
     if (balance >= trip.price_JOD) {
+      // build a ticket record
+      const newTicket = {
+        id: `TKT_${Date.now()}`,
+        date: trip.departure_date,
+        time: trip.departure_time,
+        from: trip.origin_name,
+        to: trip.destination_name,
+        price: trip.price_JOD,
+        quantity: 1,
+        status: 'Confirmed',
+      } as const;
+
+      // persist the ticket to localStorage
+      try {
+        const key = 'ticketHistory'; 
+        const existing = typeof window !== 'undefined' ? localStorage.getItem(key) : null;
+        const arr = existing ? JSON.parse(existing) : [];
+        arr.unshift(newTicket); // unshift method is a way to add an element to the beginning of an array
+        if (typeof window !== 'undefined') localStorage.setItem(key, JSON.stringify(arr));
+
+        // emit custom event so history page can update immediately
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('ticketAdded', { detail: newTicket }));
+        }
+      } catch (e) {
+        console.error("Error saving ticket to localStorage:", e);
+      }
+
       onBook(trip.price_JOD);
       notifications.show({
         title: 'Booking Successful!',

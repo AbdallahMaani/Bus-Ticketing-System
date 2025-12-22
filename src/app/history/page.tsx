@@ -1,4 +1,6 @@
-'use client';
+"use client";
+
+import React, { useEffect, useState } from 'react';
 
 import {
   Container,
@@ -75,15 +77,42 @@ const mockTickets: TicketRecord[] = [
 ];
 
 export default function HistoryPage() {
-  const totalSpent = mockTickets.reduce(
-    (sum, t) => sum + t.price * t.quantity,
-    0
-  );
+  const [tickets, setTickets] = useState<TicketRecord[]>(mockTickets);
 
-  const totalTrips = mockTickets.length;
-  const lastTrip = mockTickets.length ? mockTickets[0].date : null;
+  useEffect(() => {
+    // load stored tickets from localStorage (if any)
+    try {
+      const key = 'ticketHistory'; 
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        setTickets(JSON.parse(stored));
+      }
+    } catch (e) {}
 
-  const rows = mockTickets.map((ticket) => (
+    // listen for newly added tickets from Booking component
+    const handler = (e: Event) => {
+      try {
+        const detail = (e as CustomEvent).detail as TicketRecord;
+        setTickets((prev) => {
+          const updated = [detail, ...prev];
+          try {
+            localStorage.setItem('ticketHistory', JSON.stringify(updated));
+          } catch (err) {}
+          return updated;
+        });
+      } catch (err) {}
+    };
+
+    window.addEventListener('ticketAdded', handler as EventListener);
+    return () => window.removeEventListener('ticketAdded', handler as EventListener);
+  }, []);
+
+  const totalSpent = tickets.reduce((sum, t) => sum + t.price * t.quantity, 0);
+
+  const totalTrips = tickets.length;
+  const lastTrip = tickets.length ? tickets[0].date : null;
+
+  const rows = tickets.map((ticket) => (
     <Table.Tr key={ticket.id}>
       <Table.Td ta="center"> 
         <Group gap="sm" wrap="nowrap">
@@ -135,19 +164,17 @@ export default function HistoryPage() {
       <Box component="main" style={{ flex: 1, padding: '2rem' }}>
         <Container fluid>
           <Stack gap="lg">
-            {/* Title and description */}
-            <Stack align="center" gap="xs">
+=            <Stack align="center" gap="xs">
               <Title order={2}>My Ticket History</Title>
               <Text c="dimmed" size="md">Past trips, and bookings.</Text>
             </Stack>
 
-            {/* Card with summary statistics - moved here */}
-            <Center>
+=            <Center>
               <Card shadow="lg" radius="lg" withBorder miw={300}> {/* Added miw for minimum width */}
-                <Stack gap={4} align="center"> {/* Changed Group to Stack, spacing to gap */}
+                <Stack gap={4} align="center"> =
                   <Text size="xs" c="dimmed">Total spent</Text>
                   <Text fw={700} size="lg">{totalSpent.toFixed(2)} JOD</Text>
-                  <Group gap="md"> {/* Changed spacing to gap */}
+                  <Group gap="md"> =
                     <Text size="xs" c="dimmed">Trips</Text>
                     <Text fw={600}>{totalTrips}</Text>
                     <Text size="xs" c="dimmed">Last trip</Text>
@@ -159,7 +186,7 @@ export default function HistoryPage() {
 
             <Paper withBorder radius="md" p="md">
               <ScrollArea>
-                {mockTickets.length === 0 ? (
+                {tickets.length === 0 ? (
                   <Center mih={200}>
                     <Stack align="center">
                       <Text c="dimmed">No tickets found.</Text>
@@ -176,8 +203,8 @@ export default function HistoryPage() {
                     verticalSpacing="sm"
                   >
                     <Table.Thead>
-                      <Table.Tr ta="center">
-                        <Table.Th ta="center">Ticket</Table.Th> {/* No ta="center" for this one to align with avatar group */}
+                      <Table.Tr>
+                        <Table.Th ta="center">Ticket</Table.Th>
                         <Table.Th ta="center">Date</Table.Th>
                         <Table.Th ta="center">Time</Table.Th>
                         <Table.Th ta="center">Price</Table.Th>
@@ -192,9 +219,8 @@ export default function HistoryPage() {
                 )}
               </ScrollArea>
             </Paper>
-            {/* Footer Actions - moved to be below the table */}
             <Group justify="center" mt="md">
-              <Button variant="default">Filter</Button>
+              <Button variant="default" radius="md">Filter</Button>
               <Button radius="md">Search History</Button>
             </Group>
           </Stack>

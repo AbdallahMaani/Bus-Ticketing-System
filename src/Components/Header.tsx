@@ -110,7 +110,7 @@ function Header() {
                         {full_name}
                       </Text>
                       <Text c="dimmed" size="md">
-                        Balance: {balance} JD
+                        Balance: {balance.toFixed(2)} JD
                       </Text>
                     </div>
                     <Avatar color="blue" radius="xl">
