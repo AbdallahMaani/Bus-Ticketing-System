@@ -12,6 +12,8 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import type { Trip } from './TicketForm';
+import { useTickets } from "@/Components/TicketStore"; // better than "../Components/TicketStore" because of the absolute path
+
 
 interface BookingProps {
   opened: boolean;
@@ -23,6 +25,8 @@ interface BookingProps {
 
 function Booking({ opened, onClose, trip, balance, onBook }: BookingProps) {
   const [quantity, setQuantity] = useState<number>(1);
+  const { addTicket } = useTickets();
+
 
   if (!trip) return null;
   const maxAvailable = Math.max(0, trip.available_seats ?? 0); // trip.available_seats ?? 0 this means if trip.available_seats is null or undefined, use 0 instead
@@ -53,7 +57,7 @@ function Booking({ opened, onClose, trip, balance, onBook }: BookingProps) {
         status: 'Confirmed',
       } as const;
 
-      // temp code to save the ticket in localStorage
+      /* temp code to save the ticket in localStorage
       try {
         const key = 'ticketHistory'; 
         const existing = typeof window !== 'undefined' ? localStorage.getItem(key) : null; // only on client side CSR
@@ -68,8 +72,9 @@ function Booking({ opened, onClose, trip, balance, onBook }: BookingProps) {
         }
       } catch (e) {
         console.error("Error saving ticket to localStorage:", e);
-      }
+      }*/
 
+      addTicket(newTicket);
       onBook(totalPrice);
       onClose(); 
 

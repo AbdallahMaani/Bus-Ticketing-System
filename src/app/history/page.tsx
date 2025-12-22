@@ -21,92 +21,10 @@ import {
 
 import Header from '@/Components/Header';
 import Footer from '@/Components/Footer';
-
-interface TicketRecord {
-  id: string;
-  date: string;
-  time: string;
-  from: string;
-  to: string;
-  price: number;
-  quantity: number;
-  total?: number;
-  status: 'Confirmed' | 'Cancelled';
-}
-
-const mockTickets: TicketRecord[] = [ //dummy data 
-  {
-    id: 'TKT_001',
-    date: '2025-12-15',
-    time: '09:30',
-    from: 'Amman',
-    to: 'Irbid',
-    price: 3.5,
-    quantity: 1,
-    status: 'Confirmed',
-  },
-  {
-    id: 'TKT_002',
-    date: '2025-12-10',
-    time: '14:00',
-    from: 'Irbid',
-    to: 'Aqaba',
-    price: 7.0,
-    quantity: 2,
-    status: 'Confirmed',
-  },
-  {
-    id: 'TKT_003',
-    date: '2025-11-25',
-    time: '17:45',
-    from: 'Irbid',
-    to: 'Amman',
-    price: 3.5,
-    quantity: 1,
-    status: 'Cancelled',
-  },
-  {
-    id: 'TKT_023',
-    date: '2025-11-22',
-    time: '12:45',
-    from: 'Zaraqa',
-    to: 'Amman',
-    price: 3.5,
-    quantity: 2,
-    status: 'Cancelled',
-  }
-];
+import { useTickets } from "@/Components/TicketStore";
 
 export default function HistoryPage() {
-  const [tickets, setTickets] = useState<TicketRecord[]>(mockTickets);
-
-  useEffect(() => {
-    // load stored tickets from localStorage (if any)
-    try {
-      const key = 'ticketHistory'; 
-      const stored = localStorage.getItem(key);
-      if (stored) {
-        setTickets(JSON.parse(stored));
-      }
-    } catch (e) {}
-
-    // listen for newly added tickets from Booking component
-    const handler = (e: Event) => {
-      try {
-        const detail = (e as CustomEvent).detail as TicketRecord; // get the new ticket from from booking component using event 
-        setTickets((prev) => {
-          const updated = [detail, ...prev]; // add the new ticket to the beginning of the array
-          try {
-            localStorage.setItem('ticketHistory', JSON.stringify(updated)); // update localStorage
-          } catch (err) {}
-          return updated;
-        });
-      } catch (err) {}
-    };
-
-    window.addEventListener('ticketAdded', handler as EventListener); // listen for the custom event ( ticketAdded )
-    return () => window.removeEventListener('ticketAdded', handler as EventListener);
-  }, []);
+  const { tickets } = useTickets();
 
   const totalSpent = tickets.reduce((sum, t) => sum + (t.total ?? t.price * t.quantity), 0); // the ?? operator means if t.total is null or undefined, use (t.price * t.quantity) instead
 

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ColorSchemeScript, MantineProvider } from "@mantine/core";
 import "@mantine/core/styles.css";
 import "./globals.css";
+import { TicketProvider } from "@/Components/TicketStore";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,18 +20,22 @@ export const metadata: Metadata = {
   description: "A bus ticketing system with Next.js and Mantine",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children, }: Readonly<{ children: React.ReactNode; }>) 
+{
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <ColorSchemeScript />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <MantineProvider>{children}</MantineProvider>
+        {/*<MantineProvider>{children}</MantineProvider>
+        <TicketProvider>{children}</TicketProvider> children rendered only one time */} 
+        <MantineProvider>
+          <TicketProvider>
+            {children}
+          </TicketProvider>
+        </MantineProvider>
+
       </body>
     </html>
   );
