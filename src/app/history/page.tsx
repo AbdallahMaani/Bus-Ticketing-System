@@ -171,10 +171,10 @@ export default function HistoryPage() {
 
 =            <Center>
               <Card shadow="lg" radius="lg" withBorder miw={300}> {/* Added miw for minimum width */}
-                <Stack gap={4} align="center"> =
+                <Stack gap={4} align="center"> 
                   <Text size="xs" c="dimmed">Total spent</Text>
                   <Text fw={700} size="lg">{totalSpent.toFixed(2)} JOD</Text>
-                  <Group gap="md"> =
+                  <Group gap="md"> 
                     <Text size="xs" c="dimmed">Trips</Text>
                     <Text fw={600}>{totalTrips}</Text>
                     <Text size="xs" c="dimmed">Last trip</Text>
