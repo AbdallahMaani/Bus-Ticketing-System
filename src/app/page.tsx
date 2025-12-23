@@ -98,10 +98,6 @@ export default function Home() {
   };
 
   return (
-    // MantineProvider and ColorSchemeScript are removed as dark mode is removed
-    // If you need MantineProvider for other reasons (e.g., custom theme, notifications),
-    // you can re-add it without colorScheme props.
-    // For now, assuming it's only for color scheme.
     <>
       <Box
         style={{
@@ -143,12 +139,30 @@ export default function Home() {
             <TicketForm onResults={handleResults} resetKey={resetKey} onReset={() => { setTrips([]); setFromCity(null); setToCity(null); }} from={fromCity} setFrom={setFromCity} to={toCity} setTo={setToCity} />
             <div style={{ marginTop: "3rem" }}>
               {trips.length > 0 && (
-                <Group justify="center" mb="md">
-                  <Text size="lg" fw={650}>Available Trips</Text>
-                  <Badge variant="light" size="xl" color="blue" radius="xl">
-                    {trips.length}
-                  </Badge>
-                </Group>
+                <Group justify="center" mb="lg">
+                <Paper
+                  withBorder
+                  radius="xl"
+                  px="xl" // in mantine, px is padding horizontal
+                  py="sm" // in mantine, py is padding vertical
+                  shadow="md"
+                >
+                  <Group gap="sm">
+                    <Text fw={600} size="lg">
+                      Available Trips
+                    </Text>
+                    <Badge
+                      size="lg"
+                      radius="xl"
+                      variant="light"
+                      color="blue"
+                    >
+                      {trips.length}
+                    </Badge>
+                  </Group>
+                </Paper>
+              </Group>
+
               )}
               <Paper
                 p="xs" // in mantine, p is padding

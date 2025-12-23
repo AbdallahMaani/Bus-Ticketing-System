@@ -53,7 +53,7 @@ export function TicketProvider({ children }: { children: React.ReactNode }) {
 
 // Custom hook
 export function useTickets() {
-  const context = useContext(TicketContext);
+  const context = useContext(TicketContext); 
   if (!context) {
     throw new Error("useTickets must be used inside TicketProvider");
   } // this hook allows components to easily access the store
