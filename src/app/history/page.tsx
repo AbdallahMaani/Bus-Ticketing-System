@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React from "react";
 import {
   Container,
   Title,
@@ -16,24 +16,28 @@ import {
   Card,
   Avatar,
   Center,
-} from '@mantine/core';
-import Header from '@/Components/Header';
-import Footer from '@/Components/Footer';
+  SimpleGrid,
+} from "@mantine/core";
+import Header from "@/Components/Header";
+import Footer from "@/Components/Footer";
 import { useTickets } from "@/Components/TicketStore";
 
 export default function HistoryPage() {
   const { tickets } = useTickets();
 
-  const totalSpent = tickets.reduce((sum, t) => sum + (t.total ?? t.price * t.quantity), 0); // the ?? operator means if t.total is null or undefined, use (t.price * t.quantity) instead
+  const totalSpent = tickets.reduce(
+    (sum, t) => sum + (t.total ?? t.price * t.quantity),
+    0
+  );
 
   const totalTrips = tickets.length;
   const lastTrip = tickets.length ? tickets[0].date : null;
 
   const rows = tickets.map((ticket) => (
     <Table.Tr key={ticket.id}>
-      <Table.Td ta="center"> 
+      <Table.Td>
         <Group gap="sm" wrap="nowrap">
-          <Avatar color="blue" radius="sm">
+          <Avatar color="blue" radius="md">
             🚌
           </Avatar>
           <Stack gap={0}>
@@ -47,17 +51,17 @@ export default function HistoryPage() {
         </Group>
       </Table.Td>
 
-      <Table.Td ta="center">{ticket.date}</Table.Td>
-      <Table.Td ta="center">{ticket.time}</Table.Td>
-      <Table.Td ta="center">{ticket.price.toFixed(2)} JOD</Table.Td>
-      <Table.Td ta="center">{ticket.quantity}</Table.Td>
-      <Table.Td ta="center">
-        {( (ticket.total ?? (ticket.price * ticket.quantity)) ).toFixed(2)} JOD
+      <Table.Td>{ticket.date}</Table.Td>
+      <Table.Td>{ticket.time}</Table.Td>
+      <Table.Td>{ticket.price.toFixed(2)} JOD</Table.Td>
+      <Table.Td>{ticket.quantity}</Table.Td>
+      <Table.Td>
+        {(ticket.total ?? ticket.price * ticket.quantity).toFixed(2)} JOD
       </Table.Td>
 
-      <Table.Td ta="center">
+      <Table.Td>
         <Badge
-          color={ticket.status === 'Confirmed' ? 'green' : 'red'}
+          color={ticket.status === "Confirmed" ? "green" : "red"}
           variant="light"
         >
           {ticket.status}
@@ -65,68 +69,96 @@ export default function HistoryPage() {
       </Table.Td>
 
       <Table.Td>
-        <Group justify="center">
-          <Button size="sm" variant="outline">
-            View
-          </Button>
-        </Group>
+        <Button size="xs" variant="light">
+          View
+        </Button>
       </Table.Td>
     </Table.Tr>
   ));
 
   return (
-    <Box style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <Box style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <Header />
 
-      <Box component="main" style={{ flex: 1, padding: '2rem' }}>
-        <Container fluid>
-          <Stack gap="lg">
-          <Stack align="center" gap="xs">
+      <Box component="main" style={{ flex: 1 }}>
+        <Container size="xl" py="xl">
+          <Stack gap="xl">
+            <Stack gap={4}>
               <Title order={2}>My Ticket History</Title>
-              <Text c="dimmed" size="md">Past trips, and bookings.</Text>
+              <Text c="dimmed">
+                View all your past trips and bookings in one place.
+              </Text>
             </Stack>
 
-            <Center>
-              <Card shadow="lg" radius="lg" withBorder miw={300}> {/* Added miw for minimum width */}
-                <Stack gap={4} align="center"> 
-                  <Text size="xs" c="dimmed">Total spent</Text>
-                  <Text fw={700} size="lg">{totalSpent.toFixed(2)} JOD</Text>
-                  <Group gap="md"> 
-                    <Text size="xs" c="dimmed">Trips</Text>
-                    <Text fw={600}>{totalTrips}</Text>
-                    <Text size="xs" c="dimmed">Last trip</Text>
-                    <Text fw={600}>{lastTrip ?? '-'}</Text> {/* Used nullish coalescing */}
-                  </Group>
+            <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
+              <Card withBorder radius="xl" p="lg">
+                <Stack align="center" gap={4}>
+                  <Text size="xs" c="dimmed" tt="uppercase">
+                    Total Spent
+                  </Text>
+                  <Text fw={800} size="xl">
+                    {totalSpent.toFixed(2)} JOD
+                  </Text>
                 </Stack>
               </Card>
-            </Center>
 
-            <Paper withBorder radius="md" p="md">
+              <Card withBorder radius="xl" p="lg">
+                <Stack align="center" gap={4}>
+                  <Text size="xs" c="dimmed" tt="uppercase">
+                    Total Trips
+                  </Text>
+                  <Text fw={700} size="xl">
+                    {totalTrips}
+                  </Text>
+                </Stack>
+              </Card>
+
+              <Card withBorder radius="xl" p="lg">
+                <Stack align="center" gap={4}>
+                  <Text size="xs" c="dimmed" tt="uppercase">
+                    Last Trip
+                  </Text>
+                  <Text fw={700} size="lg">
+                    {lastTrip ?? "-"}
+                  </Text>
+                </Stack>
+              </Card>
+            </SimpleGrid>
+
+            <Paper withBorder radius="lg" p="lg">
+              <Group justify="space-between" mb="md">
+                <Text fw={600}>Trips</Text>
+                <Button size="sm" variant="light">
+                  Filter
+                </Button>
+              </Group>
+
               <ScrollArea>
                 {tickets.length === 0 ? (
                   <Center mih={200}>
                     <Stack align="center">
-                      <Text c="dimmed">No tickets found.</Text>
+                      <Avatar size="lg" radius="xl">
+                        🚌
+                      </Avatar>
+                      <Text c="dimmed">No tickets found</Text>
                     </Stack>
                   </Center>
                 ) : (
                   <Table
-                    striped
                     highlightOnHover
-                    withColumnBorders
-                    miw={700}
-                    verticalSpacing="sm"
+                    verticalSpacing="md"
+                    miw={800}
                   >
                     <Table.Thead>
                       <Table.Tr>
-                        <Table.Th ta="center">Ticket</Table.Th>
-                        <Table.Th ta="center">Date</Table.Th>
-                        <Table.Th ta="center">Time</Table.Th>
-                        <Table.Th ta="center">Price</Table.Th>
-                        <Table.Th ta="center">Quantity</Table.Th>
-                        <Table.Th ta="center">Total</Table.Th>
-                        <Table.Th ta="center">Status</Table.Th>
-                        <Table.Th ta="center" w={140}>Actions</Table.Th>
+                        <Table.Th>Ticket</Table.Th>
+                        <Table.Th>Date</Table.Th>
+                        <Table.Th>Time</Table.Th>
+                        <Table.Th>Price</Table.Th>
+                        <Table.Th>Qty</Table.Th>
+                        <Table.Th>Total</Table.Th>
+                        <Table.Th>Status</Table.Th>
+                        <Table.Th>Action</Table.Th>
                       </Table.Tr>
                     </Table.Thead>
                     <Table.Tbody>{rows}</Table.Tbody>
@@ -134,9 +166,6 @@ export default function HistoryPage() {
                 )}
               </ScrollArea>
             </Paper>
-            <Group justify="center" mt="md">
-              <Button radius="md">Filter</Button>
-            </Group>
           </Stack>
         </Container>
       </Box>

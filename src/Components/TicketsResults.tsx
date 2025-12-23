@@ -13,7 +13,7 @@ import {
   Box,
   Title,
 } from "@mantine/core";
-import { Transition } from '@mantine/core'; // Import Transition
+import { Transition } from '@mantine/core'; 
 import { useRouter } from "next/navigation";
 import type { Trip } from "./TicketForm";
 import Booking from "./Booking";
