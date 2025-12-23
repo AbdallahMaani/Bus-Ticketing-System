@@ -25,22 +25,20 @@ const TicketContext = createContext<TicketContextType | null>(null);
 export function TicketProvider({ children }: { children: React.ReactNode }) {
   const [tickets, setTickets] = useState<TicketRecord[]>([]);
 
-  // تحميل البيانات من localStorage
   useEffect(() => {
     const stored = localStorage.getItem("ticketHistory");
     if (stored) {
       setTickets(JSON.parse(stored));
     }
-  }, []);
+  }, []); // getting tickets from local storage on initial load
 
-  // حفظ البيانات عند أي تغيير
   useEffect(() => {
     localStorage.setItem("ticketHistory", JSON.stringify(tickets));
-  }, [tickets]);
+  }, [tickets]); // saving new tickets to local storage whenever tickets change
 
   const addTicket = (ticket: TicketRecord) => {
     setTickets((prev) => [ticket, ...prev]);
-  };
+  }; // adding a new ticket to the beginning of the tickets array
 
   const clearTickets = () => {
     setTickets([]);
@@ -50,10 +48,10 @@ export function TicketProvider({ children }: { children: React.ReactNode }) {
     <TicketContext.Provider value={{ tickets, addTicket, clearTickets }}>
       {children}
     </TicketContext.Provider>
-  );
+  ); // this is a wrapper component that provides the ticket context to its children
 }
 
-// Hook جاهز للاستخدام
+// Custom hook
 export function useTickets() {
   const context = useContext(TicketContext);
   if (!context) {

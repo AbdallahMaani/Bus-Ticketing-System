@@ -12,7 +12,7 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import type { Trip } from './TicketForm';
-import { useTickets } from "@/Components/TicketStore"; // better than "../Components/TicketStore" because of the absolute path
+import { useTickets } from "@/Components/TicketStore";
 
 
 interface BookingProps {
@@ -26,7 +26,6 @@ interface BookingProps {
 function Booking({ opened, onClose, trip, balance, onBook }: BookingProps) {
   const [quantity, setQuantity] = useState<number>(1);
   const { addTicket } = useTickets();
-
 
   if (!trip) return null;
   const maxAvailable = Math.max(0, trip.available_seats ?? 0); // trip.available_seats ?? 0 this means if trip.available_seats is null or undefined, use 0 instead
@@ -56,23 +55,6 @@ function Booking({ opened, onClose, trip, balance, onBook }: BookingProps) {
         total: totalPrice,
         status: 'Confirmed',
       } as const;
-
-      /* temp code to save the ticket in localStorage
-      try {
-        const key = 'ticketHistory'; 
-        const existing = typeof window !== 'undefined' ? localStorage.getItem(key) : null; // only on client side CSR
-        const arr = existing ? JSON.parse(existing) : []; // get tickets from the localStorage
-        arr.unshift(newTicket); // we add the new ticket to the arr (index [0]) using shift method
-        if (typeof window !== 'undefined') localStorage.setItem(key, JSON.stringify(arr)); 
-        // check if we are in Client side and save the itcket in the localStorage
-
-        // emit custom event so history page can update immediately
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('ticketAdded', { detail: newTicket }));
-        }
-      } catch (e) {
-        console.error("Error saving ticket to localStorage:", e);
-      }*/
 
       addTicket(newTicket);
       onBook(totalPrice);

@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-
+import React from 'react';
 import {
   Container,
   Title,
@@ -18,7 +17,6 @@ import {
   Avatar,
   Center,
 } from '@mantine/core';
-
 import Header from '@/Components/Header';
 import Footer from '@/Components/Footer';
 import { useTickets } from "@/Components/TicketStore";

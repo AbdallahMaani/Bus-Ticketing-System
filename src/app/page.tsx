@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Box, Flex, ActionIcon } from "@mantine/core";
+import { Box, Flex, ActionIcon, Text, Badge, Group, Paper } from "@mantine/core";
 import Header from "../Components/Header";
 import Footer from "../Components/Footer";
 import TicketForm, { Trip } from "../Components/TicketForm";
@@ -142,7 +142,20 @@ export default function Home() {
           >
             <TicketForm onResults={handleResults} resetKey={resetKey} onReset={() => { setTrips([]); setFromCity(null); setToCity(null); }} from={fromCity} setFrom={setFromCity} to={toCity} setTo={setToCity} />
             <div style={{ marginTop: "3rem" }}>
-              <TicketsResults trips={trips} onShowOnMap={handleShowOnMap} balance={balance} onBook={handleBook} />
+              {trips.length > 0 && (
+                <Group justify="space-between" mb="md">
+                  <Text size="lg" fw={700}>Available Trips</Text>
+                  <Badge variant="light" size="xl" color="blue" radius="xl">
+                    {trips.length}
+                  </Badge>
+                </Group>
+              )}
+              <Paper
+                p="xs" // in mantine, p is padding
+                style={{ maxHeight: "calc(100vh - 400px)", overflowY: "auto" }} // Adjust max-height as needed
+              >
+                <TicketsResults trips={trips} onShowOnMap={handleShowOnMap} balance={balance} onBook={handleBook} />
+              </Paper>
             </div>
           </Box>
           

@@ -1,16 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
-  Group,
-  Text,
-  ThemeIcon,
-  Button,
-  Box,
-  Menu,
   Avatar,
+  Badge,
+  Box,
+  Button,
+  Container,
+  Group,
+  Menu,
+  Paper,
+  Text,
   UnstyledButton,
 } from "@mantine/core";
 
@@ -20,124 +22,96 @@ function Header() {
   const [full_name, setFullname] = useState("");
   const [balance, setBalance] = useState(0);
 
-  // Check login status on component mount
   useEffect(() => {
     const userJson = localStorage.getItem("currentUser");
     if (userJson) {
       try {
         const user = JSON.parse(userJson);
         setIsLoggedIn(true);
-        // Use full_name from the stored user object
-        setFullname(user.full_name || "User"); // it takes the full_name from localStorage
-        setBalance(user.balance || 0); // it takes the balance from localStorage
-      } catch (error) {
-        console.error("Error parsing user data:", error);
+        setFullname(user.full_name || "User");
+        setBalance(user.balance || 0);
+      } catch {
         localStorage.removeItem("currentUser");
       }
     }
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("currentUser"); // Clear the session
+    localStorage.removeItem("currentUser");
     setIsLoggedIn(false);
     setFullname("");
     router.push("/auth/login");
   };
 
   return (
-    <Box
-      h="100%"
-      px="md"
+    <Paper
+      withBorder
+      radius={0}
+      h={75} 
+      p={5} 
+      component="header"
       bg="white"
-      style={{ borderBottom: "1px solid #e9ecef" }}
     >
-      <Group justify="space-between" h="100%" align="center" w="100%">
-        <Link href="/" style={{ textDecoration: "none" }}>
-          <Group gap="xs">
-            <ThemeIcon color="blue" variant="light" size="lg" radius="lg">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M8 6v6" />
-                <path d="M15 6v6" />
-                <path d="M2 12h19.6" />
-                <path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3" />
-                <circle cx="7" cy="18" r="2" />
-                <path d="M9 18h5" />
-                <circle cx="16" cy="18" r="2" />
-              </svg>
-            </ThemeIcon>
-            <Text
-              fw={800}
-              size="xl"
-              c="blue"
-              style={{ letterSpacing: "-0.5px" }}
-            >
-              Jordan Bus System
-            </Text>
+      <Container size="xl" h="100%">
+        <Group justify="space-between" align="center" h="100%">
+          <Link href="/" style={{ textDecoration: "none" }}>
+            <Group gap="sm">
+              <Text fw={800} size="xl" c="blue"> 
+                Jordan Bus System
+              </Text>
+            </Group>
+          </Link>
+
+          <Group gap="md">
+            <Button component={Link} href="/" variant="subtle" size="xl"> 
+              Home
+            </Button>
+            <Button component={Link} href="/history" variant="subtle" size="xl"> 
+              History
+            </Button>
+            <Button component={Link} href="/about" variant="subtle" size="xl"> 
+              About
+            </Button>
           </Group>
-        </Link>
 
-        <Group gap="md">
-          <Button variant="subtle" component={Link} href="/" size="lg" radius="md">
-            Home
-          </Button>
-          <Button variant="subtle" component={Link} href="/history" size="lg" radius="md">
-            History
-          </Button>
-          <Button variant="subtle" component={Link} href="/about" size="lg" radius="md">
-            About
-          </Button>
-          
-        </Group>
-
-        <Group>
           {isLoggedIn ? (
-            <Menu shadow="md" width={200} position="bottom-end">
+            <Menu width={253} position="bottom-end" shadow="xl"> 
               <Menu.Target>
                 <UnstyledButton>
-                  <Group gap={10}>
-                    <div style={{ textAlign: "right" }}>
-                      <Text size="lg" fw={500}>
+                  <Group gap="md"> 
+                    <Box ta="right"> 
+                      <Text fw={600} size="lg"> 
                         {full_name}
                       </Text>
-                      <Text c="dimmed" size="md">
-                        Balance: {balance.toFixed(2)} JD
-                      </Text>
-                    </div>
-                    <Avatar color="blue" radius="xl">
-                      {full_name ? full_name.charAt(0).toUpperCase() : "U"}
+                      <Badge size="lg" variant="light"> 
+                        {balance.toFixed(2)} JD
+                      </Badge>
+                    </Box>
+                    <Avatar radius="xl" color="blue" size="lg"> 
+                      {full_name.charAt(0).toUpperCase()}
                     </Avatar>
                   </Group>
                 </UnstyledButton>
               </Menu.Target>
 
               <Menu.Dropdown>
-              <Menu.Item component={Link} href="/myprofile">
+                <Menu.Item component={Link} href="/myprofile">
                   My Profile
                 </Menu.Item>
-
+                <Menu.Divider />
                 <Menu.Item color="red" onClick={handleLogout}>
                   Logout
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>
           ) : (
-            <Button component={Link} href="/auth/login" radius="md">
+            <Button component={Link} href="/auth/login" size="lg"> {/* Increased button size */}
               Login
             </Button>
           )}
         </Group>
-      </Group>
-    </Box>
+      </Container>
+    </Paper>
   );
 }
 
