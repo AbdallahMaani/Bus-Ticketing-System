@@ -20,7 +20,7 @@ interface TicketContextType {
   clearTickets: () => void;
 }
 
-const TicketContext = createContext<TicketContextType | null>(null);
+const TicketContext = createContext<TicketContextType | null>(null);  
 
 export function TicketProvider({ children }: { children: React.ReactNode }) {
   const [tickets, setTickets] = useState<TicketRecord[]>([]);
@@ -56,6 +56,6 @@ export function useTickets() {
   const context = useContext(TicketContext);
   if (!context) {
     throw new Error("useTickets must be used inside TicketProvider");
-  }
+  } // this hook allows components to easily access the store
   return context;
 }

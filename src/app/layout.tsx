@@ -31,7 +31,7 @@ export default function RootLayout({ children, }: Readonly<{ children: React.Rea
         {/*<MantineProvider>{children}</MantineProvider>
         <TicketProvider>{children}</TicketProvider> children rendered only one time */} 
         <MantineProvider>
-          <TicketProvider>
+          <TicketProvider> {/* TicketProvider wraps the entire app to provide ticket context */}
             {children}
           </TicketProvider>
         </MantineProvider>

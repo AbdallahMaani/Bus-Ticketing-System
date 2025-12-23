@@ -143,8 +143,8 @@ export default function Home() {
             <TicketForm onResults={handleResults} resetKey={resetKey} onReset={() => { setTrips([]); setFromCity(null); setToCity(null); }} from={fromCity} setFrom={setFromCity} to={toCity} setTo={setToCity} />
             <div style={{ marginTop: "3rem" }}>
               {trips.length > 0 && (
-                <Group justify="space-between" mb="md">
-                  <Text size="lg" fw={700}>Available Trips</Text>
+                <Group justify="center" mb="md">
+                  <Text size="lg" fw={650}>Available Trips</Text>
                   <Badge variant="light" size="xl" color="blue" radius="xl">
                     {trips.length}
                   </Badge>

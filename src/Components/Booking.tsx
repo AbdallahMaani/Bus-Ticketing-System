@@ -48,13 +48,13 @@ function Booking({ opened, onClose, trip, balance, onBook }: BookingProps) {
         id: `TKT_${Date.now()}`,
         date: trip.departure_date,
         time: trip.departure_time,
-        from: trip.origin_name,
-        to: trip.destination_name,
+        from: trip.origin_name ?? '',
+        to: trip.destination_name ?? '', // we use ?? '' to ensure it's a string
         price: trip.price_JOD,
         quantity,
         total: totalPrice,
         status: 'Confirmed',
-      } as const;
+      };
 
       addTicket(newTicket);
       onBook(totalPrice);
