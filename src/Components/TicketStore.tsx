@@ -20,17 +20,18 @@ interface TicketContextType {
   clearTickets: () => void;
 }
 
-const TicketContext = createContext<TicketContextType | null>(null);  
+const TicketContext = createContext<TicketContextType | null>(null); 
 
-export function TicketProvider({ children }: { children: React.ReactNode }) {
+export function TicketProvider({ children }: { children: React.ReactNode }) { 
   const [tickets, setTickets] = useState<TicketRecord[]>([]);
 
   useEffect(() => {
-    const stored = localStorage.getItem("ticketHistory");
+    const stored = localStorage.getItem("ticketHistory"); // the key in local storage
     if (stored) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTickets(JSON.parse(stored));
     }
-  }, []); // getting tickets from local storage on initial load
+  }, []);
 
   useEffect(() => {
     localStorage.setItem("ticketHistory", JSON.stringify(tickets));

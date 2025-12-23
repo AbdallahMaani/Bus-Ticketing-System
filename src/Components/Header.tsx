@@ -78,7 +78,7 @@ function Header() {
               <UnstyledButton>
                 <Group gap="md">
                   <Box ta="right">
-                    <Text fw={600} size="lg">
+                    <Text fw={600} size="lg" c="dimmed">
                       {full_name}
                     </Text>
                     <Badge size="lg" variant="light">
@@ -103,7 +103,7 @@ function Header() {
             </Menu.Dropdown>
           </Menu>
         ) : (
-          <Button component={Link} href="/auth/login" size="lg">
+          <Button component={Link} href="/auth/login" size="lg" radius="lg">
             Login
           </Button>
         )}

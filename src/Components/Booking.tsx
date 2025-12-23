@@ -9,6 +9,7 @@ import {
   Stack,
   NumberInput,
   Divider,
+  Badge, // Added Badge for total price and balance status
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import type { Trip } from './TicketForm';
@@ -69,34 +70,65 @@ function Booking({ opened, onClose, trip, balance, onBook }: BookingProps) {
     }
   };
 
+  // Determine the color for the balance status badge
+  const balanceStatusColor = balance >= totalPrice ? 'green' : 'red';
+  const balanceStatusText = balance >= totalPrice ? 'Funds are sufficient for this booking' : 'Insufficient funds to complete this booking';
+
   return (
-    <Modal opened={opened} onClose={onClose} title="Confirm Booking" centered radius="lg"> 
-      <Stack>
-        <Text fw={700} size="lg">
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      centered
+      radius="lg"
+    >
+      <Stack gap="md"> 
+        <Group align="center" gap="xs">
+          <Text fw={700} size="xl">
           {trip.origin_name} → {trip.destination_name}
-        </Text>
-        <Text>Date: {trip.departure_date}</Text>
-        <Text>Time: {trip.departure_time}</Text>
-        <Text>Price: {trip.price_JOD.toFixed(2)} JOD</Text>
+          </Text>
+        </Group>
+
+        <Group gap="sm">
+          <Text size="sm">Date: <Text span fw={500}>{trip.departure_date}</Text></Text>
+          <Text size="sm">Time: <Text span fw={500}>{trip.departure_time}</Text></Text>
+        </Group>
+
+        <Group align="center" gap="xs">
+          <Text size="md">Price per ticket: <Text span fw={600}>{trip.price_JOD.toFixed(2)} JOD</Text></Text>
+        </Group>
+
         <NumberInput
-          label="Quantity"
+          label="Number of Tickets" 
+          description={`Available seats: ${maxAvailable}`} 
           min={1}
           max={maxAvailable}
           value={quantity}
           onChange={(v) => setQuantity(v ?? 1)} // (v ?? 1) means if the value (quantity) is null or undefined, use 1 instead
-          styles={{ input: { width: 120 } }}
+          styles={{ input: { width: 120 } }} 
           radius="md"
         />
-        <Text>Total: {totalPrice.toFixed(2)} JOD</Text>
-        <Text size="sm" c={quantity <= maxAvailable ? 'dimmed' : 'red'}>
-          {`Available seats: ${maxAvailable}`}
-        </Text>
-        <Divider />
-        <Text>Your Balance: {balance.toFixed(2)} JOD</Text>
-        <Text c={balance >= totalPrice ? 'green' : 'red'}>
-          {balance >= totalPrice ? 'Sufficient funds' : 'Insufficient funds'}
-        </Text>
-        <Group justify="flex-end">
+
+        <Divider my="xs" /> {/* Added vertical margin */}
+
+        <Group justify="space-between" align="center">
+          <Text fw={700} size="lg">Total Amount:</Text>
+          <Badge size="xl" variant="light" color="blue" py="sm">
+            {totalPrice.toFixed(2)} JOD
+          </Badge>
+        </Group>
+
+        <Divider my="xs" />
+
+        <Group justify="space-between" align="center">
+          <Text size="md">Your Current Balance:</Text>
+          <Text fw={600} size="md">{balance.toFixed(2)} JOD</Text>
+        </Group>
+
+        <Badge color={balanceStatusColor} variant="light" size="lg" fullWidth> 
+          {balanceStatusText}
+        </Badge>
+
+        <Group justify="flex-end" mt="md"> 
           <Button variant="outline" onClick={onClose} radius="md">
             Cancel
           </Button>

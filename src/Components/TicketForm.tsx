@@ -229,11 +229,6 @@ export default function TicketForm({ onResults, onReset, resetKey, from, setFrom
   }, [resetKey]); // we use resetKey as a simple counter that increments and trigger the useEffect when parent wants to reset
 
   
-  const blackTextStyle = {
-    label: { color: "black", fontWeight: 500 },
-    input: { color: "black" },
-  };
-
   return (
     <Paper
       component="form"
@@ -260,7 +255,6 @@ export default function TicketForm({ onResults, onReset, resetKey, from, setFrom
           onChange={setFrom}
           searchable
           nothingFoundMessage="No city found"
-          styles={blackTextStyle}
           radius="md"
         />
         <Select
@@ -271,7 +265,6 @@ export default function TicketForm({ onResults, onReset, resetKey, from, setFrom
           onChange={setTo}
           searchable
           nothingFoundMessage="No city found"
-          styles={blackTextStyle}
           radius="md"
         />
         {noResults && (
