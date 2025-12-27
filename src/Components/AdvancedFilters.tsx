@@ -31,23 +31,23 @@ export default function AdvancedFilters({onResults,onClose,onReset,currentTrips,
   };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault(); 
     setNoResults(false);
 
     // Start with current trips
     let filteredTrips = currentTrips.slice();
 
-    // 1️⃣ Filter by date
+    // 1️ Filter by date
     if (date) {
       filteredTrips = filteredTrips.filter((t) => t.departure_date === date);
     }
 
-    // 2️⃣ Filter by bus features
+    // 2️Filter by bus features
     filteredTrips = filteredTrips.filter((trip) => {
       return filters.every((f) => trip.features.includes(f));
     });
 
-    // 3️⃣ Sorting
+    // Sorting
     if (sortBy === "price") {
       filteredTrips.sort((a, b) => a.price_JOD - b.price_JOD);
     } else if (sortBy === "rating") {

@@ -77,7 +77,7 @@ function Booking({ opened, onClose, trip, balance, onBook }: BookingProps) {
   return (
     <Modal
       opened={opened}
-      onClose={onClose}
+      onClose={onClose} 
       centered
       radius="lg"
     >
@@ -88,7 +88,7 @@ function Booking({ opened, onClose, trip, balance, onBook }: BookingProps) {
           </Text>
         </Group>
 
-        <Group gap="sm">
+        <Group gap="sm"> 
           <Text size="sm">Date: <Text span fw={500}>{trip.departure_date}</Text></Text>
           <Text size="sm">Time: <Text span fw={500}>{trip.departure_time}</Text></Text>
         </Group>
@@ -108,7 +108,7 @@ function Booking({ opened, onClose, trip, balance, onBook }: BookingProps) {
           radius="md"
         />
 
-        <Divider my="xs" /> {/* Added vertical margin */}
+        <Divider my="xs" /> {/* Added vertical margin */} 
 
         <Group justify="space-between" align="center">
           <Text fw={700} size="lg">Total Amount:</Text>

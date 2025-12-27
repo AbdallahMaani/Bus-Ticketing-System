@@ -25,7 +25,7 @@ import { useTickets } from "@/Components/TicketStore";
 
 export default function HistoryPage() {
   const router = useRouter();
-  const { tickets } = useTickets();
+  const { tickets } = useTickets(); // we destructure tickets from useTickets hook
 
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
@@ -59,7 +59,7 @@ export default function HistoryPage() {
   const lastTrip = tickets.length ? tickets[0].date : "-";
 
   const rows = tickets.map((ticket) => ( // maps tickets from the usetickets to the table 
-    <Table.Tr key={ticket.id}>
+    <Table.Tr key={ticket.id}> {/* above in JS we use // to write a Javascript comment below in HTML we use {/**/}{/* to write a Javascript comment*/}
       <Table.Td>
         <Group gap="sm" wrap="nowrap">
           <Avatar color="blue" radius="md">
@@ -74,7 +74,7 @@ export default function HistoryPage() {
             </Text>
           </Stack>
         </Group>
-      </Table.Td>
+      </Table.Td> 
 
       <Table.Td ta="center">{ticket.date}</Table.Td>
       <Table.Td ta="center">{ticket.time}</Table.Td>
