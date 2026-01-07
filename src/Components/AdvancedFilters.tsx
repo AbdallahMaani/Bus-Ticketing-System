@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Select,
   TextInput,
@@ -13,8 +13,9 @@ import {
   ActionIcon,
   Title,
 } from "@mantine/core";
-import type { Trip } from "./TicketForm";
+import type { Trip } from "./types";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://localhost:7088";
 
 export default function AdvancedFilters({onResults,onClose,onReset,currentTrips,onClearMapRoutes}: {onResults?: (trips: Trip[]) => void;  onClose?: () => void;  onReset?: () => void;  currentTrips: Trip[];  onClearMapRoutes?: () => void; })
 {
@@ -22,6 +23,24 @@ export default function AdvancedFilters({onResults,onClose,onReset,currentTrips,
   const [sortBy, setSortBy] = useState<string | null>("departure");
   const [filters, setFilters] = useState<string[]>([]);
   const [noResults, setNoResults] = useState(false);
+  const [availableFeatures, setAvailableFeatures] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchFilters = async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/Trip/filters`);
+            if (!res.ok) return;
+            const data = await res.json();
+            // Assuming data has a "features" property with an array of strings
+            if (data.features && Array.isArray(data.features)) {
+                setAvailableFeatures(data.features);
+            }
+        } catch (err) {
+            console.error("Failed to load filters", err);
+        }
+    };
+    fetchFilters();
+  }, []);
 
   /* ===== Helpers ===== */
   const toggleFilter = (name: string) => {
@@ -50,8 +69,6 @@ export default function AdvancedFilters({onResults,onClose,onReset,currentTrips,
     // 3️⃣ Sorting
     if (sortBy === "price") {
       filteredTrips.sort((a, b) => a.price_JOD - b.price_JOD);
-    } else if (sortBy === "rating") {
-      filteredTrips.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     } else if (sortBy === "available") {
       filteredTrips.sort((a, b) => b.available_seats - a.available_seats);
     }
@@ -141,7 +158,6 @@ export default function AdvancedFilters({onResults,onClose,onReset,currentTrips,
           data={[
             { value: "departure", label: "Departure Time" },
             { value: "price", label: "Price (Low to High)" },
-            { value: "rating", label: "Rating (High to Low)" },
             { value: "available", label: "Available Seats" },
           ]}
           value={sortBy}
@@ -151,17 +167,15 @@ export default function AdvancedFilters({onResults,onClose,onReset,currentTrips,
         />
 
         <Group gap="xs">
-          {["A/C", "WiFi", "WC", "USB Charge", "TV", "Reclining Seats"].map(
-            (f) => (
-              <Checkbox
-                key={f}
-                label={f}
-                checked={filters.includes(f)}
-                onChange={() => toggleFilter(f)}
-                styles={{ label: { color: "black" } }}
-              />
-            )
-          )}
+            {availableFeatures.map((f) => (
+                <Checkbox
+                    key={f}
+                    label={f}
+                    checked={filters.includes(f)}
+                    onChange={() => toggleFilter(f)}
+                    styles={{ label: { color: "black" } }}
+                />
+            ))}
         </Group>
 
         {noResults && (

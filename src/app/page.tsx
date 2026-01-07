@@ -4,11 +4,14 @@ import React, { useState, useEffect, useRef } from "react";
 import { Box, Flex, ActionIcon, Text, Badge, Group, Paper } from "@mantine/core";
 import Header from "../Components/Header";
 import Footer from "../Components/Footer";
-import TicketForm, { Trip } from "../Components/TicketForm";
+import TicketForm from "../Components/TicketForm";
+import type { Trip, Areas, City } from "../Components/types";
 import TicketsResults from "@/Components/TicketsResults";
 import BusMap, { BusMapRef } from "@/Components/BusMap";
+import Booking from "@/Components/Booking";
 import AdvancedFilters from "@/Components/AdvancedFilters"; // Keep AdvancedFilters import
-import { Areas } from "@/Components/TicketForm"; // Import Areas type
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://localhost:7088";
 
 export default function Home() {
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -19,39 +22,33 @@ export default function Home() {
   const [toCity, setToCity] = useState<string | null>(null);     // Lifted state for 'To' city
   const [balance, setBalance] = useState(0);
   const [allAreas, setAllAreas] = useState<Areas[]>([]); // New state for all areas
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
   const mapRef = useRef<BusMapRef>(null); // Ref for BusMap component mapRef is created using useRef hook with type BusMapRef
   
-  /* How useRef all connects and why it's used:
-      In page.tsx, mapRef is created.
-      mapRef is passed to the BusMap component: <BusMap ref={mapRef} trips={trips} />.
-      Because BusMap is wrapped in forwardRef, it receives mapRef as its ref prop.
-      Inside BusMap, useImperativeHandle takes this ref and attaches an object containing zoomTo and clearRoutes methods to its .current property.
-      Now, back in page.tsx, the Home component can call these methods directly:
-      mapRef.current?.zoomTo(lat, lng); (e.g., when a user clicks "Show on map" for a trip).
-      mapRef.current?.clearRoutes(); (e.g., when the search results are reset).
- */
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch("/jordan_bus_data.json");
-        const data = await res.json();
-        setAllAreas(data.areas || []); // Store all areas
+        const cityRes = await fetch(`${API_BASE_URL}/api/City`);
+        const cityData: City[] = await cityRes.json();
         
-        // Get balance from logged-in user or default
+        const allStations: Areas[] = cityData.flatMap((city: City) => 
+            city.busStations.map((station: Areas) => ({
+                ...station,
+                city_id: city.id
+            }))
+        );
+        setAllAreas(allStations);
+
         const currentUserJson = localStorage.getItem("currentUser");
         if (currentUserJson) {
           const currentUser = JSON.parse(currentUserJson);
           setBalance(currentUser.balance || 0);
         } else {
-          // Default to U1001 if no user logged in
-          const user = data.users.find((u: { user_id: string; balance: number }) => u.user_id === 'U1001'); //replace any with specific type
-          // const user = data.users.find((u: any) => u.user_id === 'U1001'); 
-
-          setBalance(user ? user.balance : 1000);
+            setBalance(1000); 
         }
       } catch (err) {
-        console.error("Error loading bus data:", err);
+        console.error("Error loading initial data:", err);
         setBalance(1000);
       }
     };
@@ -80,12 +77,14 @@ export default function Home() {
     }
   };
 
-  const handleBook = (price: number) => { // checks the balance and deducts the price
-    if(balance < price) {
-      return;
-    }
+  const handleBook = (trip: Trip) => {
+    setSelectedTrip(trip);
+    setBookingModalOpen(true);
+  };
+
+  const handleBookingSuccess = (totalPrice: number) => {
     setBalance(prev => {
-      const newBalance = prev - price;
+      const newBalance = prev - totalPrice;
       // Update localStorage if user is logged in
       const currentUserJson = localStorage.getItem("currentUser");
       if (currentUserJson) {
@@ -95,6 +94,8 @@ export default function Home() {
       }
       return newBalance;
     });
+    setBookingModalOpen(false);
+    setSelectedTrip(null);
   };
 
   return (
@@ -172,6 +173,8 @@ export default function Home() {
               </Paper>
             </div>
           </Box>
+
+          <Booking opened={bookingModalOpen} onClose={() => { setBookingModalOpen(false); setSelectedTrip(null); }} trip={selectedTrip} balance={balance} onBooked={handleBookingSuccess} />
           
           <Box
             w={{ base: "100%", lg: "77%" }}

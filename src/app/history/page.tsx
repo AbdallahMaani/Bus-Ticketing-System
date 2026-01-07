@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useEffect, useState } from "react";
 import {
@@ -17,189 +17,396 @@ import {
   Avatar,
   Center,
   SimpleGrid,
+  ThemeIcon,
+  Loader,
+  Alert,
 } from "@mantine/core";
 import { useRouter } from "next/navigation";
 import Header from "@/Components/Header";
 import Footer from "@/Components/Footer";
-import { useTickets } from "@/Components/TicketStore";
+import {
+  IconHistory,
+  IconTicket,
+  IconCalendar,
+  IconReportMoney,
+  IconAlertCircle,
+  IconInfoCircle,
+} from "@tabler/icons-react";
+
+interface Booking {
+  bookingId: string;
+  userId: string;
+  tripId: string;
+  originName: string;
+  destinationName: string;
+  busType: string;
+  bookingDate: string;
+  bookingStatus: string;
+  priceTotal: number;
+  quantity: number;
+}
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "https://localhost:7088";
 
 export default function HistoryPage() {
   const router = useRouter();
-  const { tickets } = useTickets();
-
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [tickets, setTickets] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [canceling, setCanceling] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const userJson = localStorage.getItem("currentUser");
-
     if (!userJson) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsLoggedIn(false);
+      setLoading(false);
+      return;
+    }
+    setIsLoggedIn(true);
+
+    (async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+          localStorage.clear();
+          setIsLoggedIn(false);
+          router.push("/auth/login");
+          return;
+        }
+
+        const res = await fetch(`${API_BASE_URL}/api/Booking/my-bookings`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) {
+          if (res.status === 401) {
+            localStorage.clear();
+            setIsLoggedIn(false);
+            router.push("/auth/login");
+            return;
+          }
+          console.error("Failed to load bookings", res.status);
+          setTickets([]);
+          return;
+        }
+        const data: Booking[] = await res.json();
+        data.sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime());
+        setTickets(data);
+      } catch (err) {
+        console.error("Error fetching bookings", err);
+        setTickets([]);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [router]);
+
+  const handleCancel = async (bookingId: string) => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      localStorage.clear();
+      router.push("/auth/login");
       return;
     }
 
-    try {  
-      const user = JSON.parse(userJson);
-      setIsLoggedIn(!!user); // !! converts to boolean
-    } catch (err) {
-      console.error("Invalid user data");
-      setIsLoggedIn(false);
-    }
-  }, []);
+    setCanceling(prev => ({ ...prev, [bookingId]: true }));
 
-  if (isLoggedIn === null) {
-    return null;
+    try {
+      // Correct endpoint: Booking controller, not Bus
+      const res = await fetch(`${API_BASE_URL}/api/Booking/${bookingId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+      });
+
+      if (res.status === 401) {
+        // Unauthorized - token invalid
+        localStorage.clear();
+        router.push("/auth/login");
+        return;
+      }
+
+      if (res.status === 403) {
+        console.error('Failed to cancel booking. Status: 403');
+        // show client-friendly error (could be a toast)
+        return;
+      }
+
+      if (!res.ok) {
+        const text = await res.text();
+        console.error('Failed to cancel booking. Status:', res.status, 'Message:', text);
+        return;
+      }
+
+      // Success: update local state
+      setTickets(prev =>
+        prev.map(ticket =>
+          ticket.bookingId === bookingId
+            ? { ...ticket, bookingStatus: 'Cancelled' }
+            : ticket
+        )
+      );
+    } catch (error) {
+      console.error('Error cancelling booking:', error);
+    } finally {
+      setCanceling(prev => ({ ...prev, [bookingId]: false }));
+    }
+  };
+
+  if (loading) {
+    return (
+      <Box
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <Header />
+        <Center style={{ flex: 1 }}>
+          <Stack align="center" gap="md">
+            <Loader size="lg" />
+            <Text c="dimmed">Loading your history...</Text>
+          </Stack>
+        </Center>
+        <Footer />
+      </Box>
+    );
   }
 
-  const totalSpent = tickets.reduce(
-    (sum, t) => sum + (t.total ?? t.price * t.quantity),
+  if (!isLoggedIn) {
+    return (
+      <Box
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <Header />
+        <Container size="xl" py="xl" style={{ flex: 1 }}>
+          <Center mih={400}>
+            <Paper withBorder p="xl" radius="lg" shadow="sm">
+              <Stack align="center" gap="md">
+                <ThemeIcon size={60} radius="xl" color="red">
+                  <IconAlertCircle size={30} />
+                </ThemeIcon>
+                <Title order={3}>You are not logged in</Title>
+                <Text c="dimmed" ta="center">
+                  Please login to view your ticket history.
+                </Text>
+                <Button
+                  size="md"
+                  onClick={() => router.push("/auth/login")}
+                  color="blue"
+                >
+                  Go to Login
+                </Button>
+              </Stack>
+            </Paper>
+          </Center>
+        </Container>
+        <Footer />
+      </Box>
+    );
+  }
+
+  const totalSpent = tickets.filter(t => t.bookingStatus === 'Confirmed').reduce(
+    (sum, t) => sum + t.priceTotal,
     0
   );
-  const totalTrips = tickets.length;
-  const lastTrip = tickets.length ? tickets[0].date : "-";
+  const lastTrip = tickets.length ? new Date(tickets[0].bookingDate).toLocaleDateString() : "-";
 
-  const rows = tickets.map((ticket) => ( // maps tickets from the usetickets to the table 
-    <Table.Tr key={ticket.id}>
+  const rows = tickets.map((ticket) => (
+    <Table.Tr key={ticket.bookingId}>
       <Table.Td>
-        <Group gap="sm" wrap="nowrap">
-          <Avatar color="blue" radius="md">
+        <Group gap="sm">
+          <Avatar color="blue" radius="md" size="lg">
             🚌
           </Avatar>
-          <Stack gap={0}>
-            <Text fw={600} size="sm" c="blue">
-              {ticket.id}
+          <div>
+            <Text fw={600} size="sm">
+              {ticket.originName} → {ticket.destinationName}
             </Text>
             <Text size="xs" c="dimmed">
-              {ticket.from} → {ticket.to}
+              ID: {ticket.bookingId}
             </Text>
-          </Stack>
+          </div>
         </Group>
       </Table.Td>
-
-      <Table.Td ta="center">{ticket.date}</Table.Td>
-      <Table.Td ta="center">{ticket.time}</Table.Td>
-      <Table.Td ta="center">{ticket.price.toFixed(2)} JOD</Table.Td>
+      <Table.Td>
+        <Text size="sm">{new Date(ticket.bookingDate).toLocaleDateString()}</Text>
+        <Text size="xs" c="dimmed">
+          {new Date(ticket.bookingDate).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+        </Text>
+      </Table.Td>
+      <Table.Td ta="right">
+        <Text fw={500}>{(ticket.priceTotal / ticket.quantity).toFixed(2)} JOD</Text>
+      </Table.Td>
       <Table.Td ta="center">{ticket.quantity}</Table.Td>
-      <Table.Td ta="center">
-        {(ticket.total ?? ticket.price * ticket.quantity).toFixed(2)} JOD
+      <Table.Td ta="right">
+        <Text fw={600} c="blue">
+          {ticket.priceTotal.toFixed(2)} JOD
+        </Text>
       </Table.Td>
       <Table.Td ta="center">
         <Badge
-          color={ticket.status === "Confirmed" ? "green" : "red"}
+          color={ticket.bookingStatus === "Confirmed" ? "green" : "red"}
           variant="light"
+          radius="sm"
         >
-          {ticket.status}
+          {ticket.bookingStatus}
         </Badge>
+      </Table.Td>
+      <Table.Td ta="center">
+        <Button
+          size="xs"
+          color="red"
+          variant="outline"
+          disabled={ticket.bookingStatus !== 'Confirmed'}
+          onClick={() => handleCancel(ticket.bookingId)}
+          loading={Boolean(canceling[ticket.bookingId])}
+        >
+          Cancel
+        </Button>
       </Table.Td>
     </Table.Tr>
   ));
 
   return (
-    <Box style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <Box
+      style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
+    >
       <Header />
-
-      <Box component="main" style={{ flex: 1 }}>
+      <Box component="main" style={{ flex: 1, backgroundColor: "#f8f9fa" }}>
         <Container size="xl" py="xl">
+          <Stack gap="xl">
+            <div style={{ textAlign: "center" }}>
+              <ThemeIcon
+                size={70}
+                radius="xl"
+                color="orange"
+                variant="light"
+                mb="md"
+                mx="auto"
+              >
+                <IconHistory size={40} />
+              </ThemeIcon>
+              <Title order={1} mb="xs">
+                My Booking History
+              </Title>
+              <Text c="dimmed" size="lg">
+                Review all your past trips and booking details
+              </Text>
+            </div>
 
-          {!isLoggedIn && (
-            <Center mih={400}>
-              <Paper withBorder p="xl" radius="lg">
-                <Stack align="center" gap="md">
-                  <Title order={3}>You are not logged in</Title>
-                  <Text c="dimmed" ta="center">
-                    Please login to view your ticket history
+            <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
+              <Card withBorder radius="md" p="lg" shadow="sm">
+                <Group justify="space-between">
+                  <Text size="sm" c="dimmed" tt="uppercase" fw={500}>
+                    Total Spent 
                   </Text>
-                  <Button
-                    size="md"
-                    onClick={() => router.push("/auth/login")}
-                  >
-                    Go to Login
-                  </Button>
-                </Stack>
-              </Paper>
-            </Center>
-          )}
+                  <ThemeIcon color="green" variant="light" size="lg" radius="md">
+                    <IconReportMoney size={20} />
+                  </ThemeIcon>
+                </Group>
+                <Text fw={700} size="2rem" mt="md">
+                  {totalSpent.toFixed(2)} JOD
+                </Text>
+              </Card>
 
-          {isLoggedIn && (
-            <Stack gap="xl">
-              <Paper shadow="md" p="xl" withBorder radius="lg">
-                <Center>
-                  <Stack align="center" gap="xs">
-                    <Title order={4} ta="center" c="dimmed">
-                      My Ticket History
-                    </Title>
-                    <Text c="dimmed" size="sm">
-                      View all your past trips and bookings
+              <Card withBorder radius="md" p="lg" shadow="sm">
+                <Group justify="space-between">
+                  <Text size="sm" c="dimmed" tt="uppercase" fw={500}>
+                    Total Trips
+                  </Text>
+                  <ThemeIcon color="blue" variant="light" size="lg" radius="md">
+                    <IconTicket size={20} />
+                  </ThemeIcon>
+                </Group>
+                <Text fw={700} size="2rem" mt="md">
+                  {tickets.filter(t => t.bookingStatus !== "Cancelled").length}
+                </Text>
+              </Card>
+
+              <Card withBorder radius="md" p="lg" shadow="sm">
+                <Group justify="space-between">
+                  <Text size="sm" c="dimmed" tt="uppercase" fw={500}>
+                    Last Trip
+                  </Text>
+                  <ThemeIcon color="orange" variant="light" size="lg" radius="md">
+                    <IconCalendar size={20} />
+                  </ThemeIcon>
+                </Group>
+                <Text fw={700} size="1.5rem" mt="md">
+                  {lastTrip}
+                </Text>
+              </Card>
+            </SimpleGrid>
+
+            <Paper withBorder radius="md" p="lg" shadow="sm">
+              {tickets.length === 0 ? (
+                <Center mih={200}>
+                  <Stack align="center" gap="sm">
+                    <ThemeIcon size={50} radius="xl" variant="light">
+                      <IconInfoCircle size={30} />
+                    </ThemeIcon>
+                    <Text c="dimmed">No tickets found.</Text>
+                    <Text size="sm" c="dimmed">
+                      When you book a ticket, it will appear here.
                     </Text>
                   </Stack>
                 </Center>
-              </Paper>
-
-              <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
-                <Card withBorder radius="xl" p="lg">
-                  <Stack align="center">
-                    <Text size="xs" c="dimmed" tt="uppercase">
-                      Total Spent
-                    </Text>
-                    <Text fw={800} size="xl">
-                      {totalSpent.toFixed(2)} JOD
-                    </Text>
-                  </Stack>
-                </Card>
-
-                <Card withBorder radius="xl" p="lg">
-                  <Stack align="center">
-                    <Text size="xs" c="dimmed" tt="uppercase">
-                      Total Trips
-                    </Text>
-                    <Text fw={700} size="xl">
-                      {totalTrips}
-                    </Text>
-                  </Stack>
-                </Card>
-
-                <Card withBorder radius="xl" p="lg">
-                  <Stack align="center">
-                    <Text size="xs" c="dimmed" tt="uppercase">
-                      Last Trip
-                    </Text>
-                    <Text fw={700} size="lg">
-                      {lastTrip}
-                    </Text>
-                  </Stack>
-                </Card>
-              </SimpleGrid>
-
-              <Paper withBorder radius="lg" p="lg">
+              ) : (
                 <ScrollArea>
-                  {tickets.length === 0 ? (
-                    <Center mih={200}>
-                      <Text c="dimmed">No tickets found</Text>
-                    </Center>
-                  ) : (
-                    <Table highlightOnHover miw={800}>
-                      <Table.Thead>
-                        <Table.Tr>
-                          <Table.Th ta="center">Ticket</Table.Th>
-                          <Table.Th ta="center">Date</Table.Th>
-                          <Table.Th ta="center">Time</Table.Th>
-                          <Table.Th ta="center">Price</Table.Th>
-                          <Table.Th ta="center">Quantity</Table.Th>
-                          <Table.Th ta="center">Total</Table.Th>
-                          <Table.Th ta="center">Status</Table.Th>
-                        </Table.Tr>
-                      </Table.Thead>
-                      <Table.Tbody>{rows}</Table.Tbody>
-                    </Table>
-                  )}
+                  <Table
+                    highlightOnHover
+                    miw={800}
+                    verticalSpacing="md"
+                    horizontalSpacing="md"
+                  >
+                    <Table.Thead>
+                      <Table.Tr>
+                        <Table.Th>Trip Details</Table.Th>
+                        <Table.Th>Date & Time</Table.Th>
+                        <Table.Th ta="right">Price</Table.Th>
+                        <Table.Th ta="center">Quantity</Table.Th>
+                        <Table.Th ta="right">Total</Table.Th>
+                        <Table.Th ta="center">Status</Table.Th>
+                        <Table.Th ta="center">Actions</Table.Th>
+                      </Table.Tr>
+                    </Table.Thead>
+                    <Table.Tbody>{rows}</Table.Tbody>
+                  </Table>
                 </ScrollArea>
-              </Paper>
-            </Stack>
-          )}
+              )}
+            </Paper>
 
+            <Alert
+              icon={<IconInfoCircle size={18} />}
+              color="blue"
+              variant="light"
+              radius="md"
+            >
+              <Text size="sm">
+                This history includes all your confirmed and canceled bookings.
+                For any inquiries, please contact our support team.
+              </Text>
+            </Alert>
+          </Stack>
         </Container>
       </Box>
-
       <Footer />
     </Box>
   );

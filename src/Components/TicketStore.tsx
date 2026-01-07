@@ -1,4 +1,4 @@
-"use client";
+/*"use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
@@ -11,7 +11,7 @@ export interface TicketRecord {
   price: number;
   quantity: number;
   total: number;
-  status: "Confirmed" | "Cancelled";
+  status: "Confirmed" | "Cancelled"; // | means "or"
 }
 
 interface TicketContextType {
@@ -60,3 +60,4 @@ export function useTickets() {
   } // this hook allows components to easily access the store
   return context;
 }
+*/

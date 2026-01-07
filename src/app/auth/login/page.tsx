@@ -1,8 +1,7 @@
-"use client"; 
-// in next js, this directive indicates that the file should be treated as a client-side component instead of a server-side component 
-// use client components can use hooks like useState and useEffect and can access browser APIs like localStorage and window
+"use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { jwtDecode } from "jwt-decode"; // 1. Import jwt decode
 import {
   TextInput,
   PasswordInput,
@@ -15,63 +14,93 @@ import {
   Alert,
   Text,
   ThemeIcon,
+  Checkbox,
+  Anchor,
 } from "@mantine/core";
 
-interface User {
-  user_id: string;
-  username: string;
-  full_name: string;
-  email: string;
-  password: string;
-  phone: string;
-  role: "customer" | "admin";
-  balance: number;
-} // user as a TypeScript interface defining the structure of a user object like class in other languages or struct in c/c++
+// 2. Define the response structure coming from your Backend
+interface TokenResponse {
+  accessToken: string;
+  refreshToken: string;
+}
+
+// 3. Define what is INSIDE your token (The Claims)
+interface DecodedToken {
+  nameid: string; // UserId
+  unique_name: string; // Username
+  role: string; // Role
+  exp: number; // Expiry
+}
 
 function LoginPage() {
-  const router = useRouter(); //use router in next 
+  const router = useRouter();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => { // e is the event object passed to the event handler
-    e.preventDefault(); // prevent default behavior of form submission which is to reload the page
-    setError(""); // clear previous errors
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
     try {
-      const response = await fetch("/jordan_bus_data.json");
+      const loginUrl = isAdmin
+        ? "https://localhost:7088/api/Admin/login"
+        : "https://localhost:7088/api/User/login";
+
+      // 4. Connect to your REAL Backend Login Endpoint
+      const response = await fetch(loginUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        // Match the 'LoginDto' in your C# code
+        body: JSON.stringify({
+          username: identifier, 
+          password: password,
+        }),
+      });
+
       if (!response.ok) {
-        throw new Error(`Failed to load data. Status: ${response.status}`);
+        // Handle 400 or 401 errors
+        const errorData = await response.text(); 
+        throw new Error(errorData || "Invalid username or password");
       }
-      const data = await response.json();
-      const users: User[] = data.users || [];
 
-      const user = users.find(
-        (u: User) =>
-          (u.username === identifier || u.email === identifier) && //identifier is either username or email 
-          u.password === password
-      ); // this will iterate through the users array and return the first user that matches the identifier and password that were input by the user
+      // 5. Get the tokens
+      const data: TokenResponse = await response.json();
 
-      if (user) {
-        // ✅ FIX: Save user to localStorage to persist "session"
-        localStorage.setItem("currentUser", JSON.stringify(user));
+      // 6. Save Tokens to LocalStorage
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
 
-        console.log(`User ${user.username} logged in successfully!`);
-        router.push("/");
+      // 7. Decode token to get user info (Optional, for UI display)
+      const decoded: DecodedToken = jwtDecode(data.accessToken);
+      localStorage.setItem("currentUser", JSON.stringify({
+        username: decoded.unique_name,
+        role: decoded.role,
+        userId: decoded.nameid,
+      }));
 
-        // Optional: Force a refresh to update the Header immediately if not using state management
-        router.refresh();
-      } else {
-        setError("Invalid username/email or password.");
-      }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (err) { //err here is a general error object // could be network error or JSON parsing error
-      setError("System error: Could not connect to data source.");
+      console.log(`User ${decoded.unique_name} logged in!`);
+      
+      // 8. Redirect
+      router.push("/");
+      router.refresh();
+
+    } catch (err: any) {
+      setError(err.message || "System error: Could not connect to server.");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleGuestAccess = () => {
-    localStorage.removeItem("currentUser"); // Ensure no previous user is logged in
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("currentUser");
     router.push("/");
   };
 
@@ -111,24 +140,27 @@ function LoginPage() {
           <Stack>
             {error && <Alert color="red">{error}</Alert>}
             <TextInput
-              label="Username or Email"
-              placeholder="Your email"
+              label="Username"
+              placeholder="Enter your username"
               required
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              styles={{ input: { color: "black" }, label: { color: "black" } }}
               radius="md"
             />
             <PasswordInput
               label="Password"
               placeholder="Your password"
               required
-              value={password} 
+              value={password}
               onChange={(e) => setPassword(e.target.value)}
-              styles={{ input: { color: "black" }, label: { color: "black" } }}
               radius="md"
             />
-            <Button fullWidth type="submit" radius="md">
+             <Checkbox
+              label="Login as Admin"
+              checked={isAdmin}
+              onChange={(event) => setIsAdmin(event.currentTarget.checked)}
+            />
+            <Button fullWidth type="submit" radius="md" loading={loading}>
               Sign in
             </Button>
           </Stack>
@@ -143,6 +175,12 @@ function LoginPage() {
           Continue as guest
         </Button>
       </Paper>
+      <Text c="dimmed" size="sm" ta="center" mt="md">
+          Don't have an account?{' '}
+          <Anchor href="/auth/signup" fz="sm">
+            Sign up
+          </Anchor>
+        </Text>
     </Container>
   );
 }

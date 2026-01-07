@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ColorSchemeScript, MantineProvider } from "@mantine/core";
 import "@mantine/core/styles.css";
 import "./globals.css";
-import { TicketProvider } from "@/Components/TicketStore";
+//import { TicketProvider } from "@/Components/TicketStore";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,9 +31,9 @@ export default function RootLayout({ children, }: Readonly<{ children: React.Rea
         {/*<MantineProvider>{children}</MantineProvider>
         <TicketProvider>{children}</TicketProvider> children rendered only one time */} 
         <MantineProvider>
-          <TicketProvider> {/* TicketProvider wraps the entire app to provide ticket context */}
+          {/*<TicketProvider> /* TicketProvider wraps the entire app to provide ticket context */}
             {children}
-          </TicketProvider>
+          {/*</TicketProvider>}*/}
         </MantineProvider>
 
       </body>
