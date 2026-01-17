@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import type { Trip } from "./types";
+import { useSession } from "next-auth/react";
 import { 
   Button, 
   Text, 
@@ -45,25 +46,10 @@ export default function TicketsResults({
     </div>
   );
 }
-
-function TicketItem({
-  trip,
-  balance,
-  onShowOnMap,
-  onBook,
-}: {
-  trip: Trip;
-  balance: number;
-  onShowOnMap?: (trip: Trip) => void;
-  onBook?: (trip: Trip) => void;
-}) {
+function TicketItem({trip,balance,onShowOnMap,onBook }: {trip: Trip;balance: number;onShowOnMap?: (trip: Trip) => void;onBook?: (trip: Trip) => void}) {
   const [detailsOpened, setDetailsOpened] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  React.useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    setIsLoggedIn(!!token);
-  }, []);
+  const { data: session, status } = useSession();
+  const isLoggedIn = status === "authenticated" && !!session?.user;
 
   return (
     <Paper withBorder p="md" radius="md" mb="md">

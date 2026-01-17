@@ -14,7 +14,6 @@ export type Trip = {
   driver_name: string;
   rating?: number;
   
-  // Origin Station Details
   origin_station_id: string;
   origin_station_name: string;
   origin_station_name_en: string;
@@ -22,7 +21,6 @@ export type Trip = {
   origin_lat?: number;
   origin_lng?: number;
   
-  // Destination Station Details
   destination_station_id: string;
   destination_station_name: string;
   destination_station_name_en: string;
@@ -46,3 +44,35 @@ export type City = {
   nameEn: string;
   busStations: Areas[];
 };
+
+import { DefaultSession } from "next-auth";
+
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      role: string;
+      balance: number;
+      fullName: string;
+    } & DefaultSession["user"];
+    accessToken: string;
+  }
+
+  interface User {
+    id: string;
+    role: string;
+    balance: number;
+    fullName: string;
+    accessToken: string;
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    id: string;
+    role: string;
+    balance: number;
+    fullName: string;
+    accessToken: string;
+  }
+}

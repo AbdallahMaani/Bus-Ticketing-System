@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { apiClientFetch } from "@/lib/apiClient";
 import {
   Table,
   Paper,
@@ -14,9 +15,10 @@ import {
   TextInput,
   Stack,
 } from "@mantine/core";
-import { IconTrash, IconPencil, IconRefresh } from "@tabler/icons-react";
+import { IconTrash, IconPencil, IconRefresh, IconCheck, IconX } from "@tabler/icons-react";
+import { Select } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import ResetPasswordModal from "./ResetPasswordModal";
+import ResetPasswordModal from "../ResetPasswordModal";
 
 type UserDto = {
   userId: string;
@@ -28,8 +30,6 @@ type UserDto = {
   balance: number;
 };
 
-const API = process.env.NEXT_PUBLIC_API_URL || "https://localhost:7088";
-
 export default function UserList() {
   const [users, setUsers] = useState<UserDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,15 +37,12 @@ export default function UserList() {
   const [editValues, setEditValues] = useState<Partial<UserDto>>({});
   const [confirmDelete, setConfirmDelete] = useState<{ open: boolean; id?: string }>({ open: false });
   const [resetModal, setResetModal] = useState<{ open: boolean; id?: string }>({ open: false });
-
-  const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+  const [roleChangeConfirm, setRoleChangeConfirm] = useState<{ open: boolean; id?: string; newRole?: string }>({ open: false });
 
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API}/api/user`, {
-        headers: { Authorization: token ? `Bearer ${token}` : "" },
-      });
+      const res = await apiClientFetch("/api/User");
       if (!res.ok) throw new Error(`Failed to load users (${res.status})`);
       const data = await res.json();
       setUsers(data);
@@ -73,23 +70,21 @@ export default function UserList() {
 
   const saveEdit = async (id: string) => {
     try {
-      const res = await fetch(`${API}/api/user/${id}`, {
+      const res = await apiClientFetch(`/api/User/${id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
         body: JSON.stringify({
+          userId: id,
           fullName: editValues.fullName,
           email: editValues.email,
           phone: editValues.phone,
+          role: editValues.role,
         }),
       });
       if (!res.ok) {
         const txt = await res.text();
         throw new Error(txt || "Update failed");
       }
-      notifications.show({ title: "User", message: "Updated", color: "green" });
+      notifications.show({ title: "User", message: "Updated successfully", color: "green" });
       setEditingId(null);
       await fetchUsers();
     } catch (err: any) {
@@ -100,9 +95,8 @@ export default function UserList() {
   const confirmDeleteUser = async (id?: string) => {
     if (!id) return;
     try {
-      const res = await fetch(`${API}/api/user/${id}`, {
+      const res = await apiClientFetch(`/api/User/${id}`, {
         method: "DELETE",
-        headers: { Authorization: token ? `Bearer ${token}` : "" },
       });
       if (!res.ok) {
         const txt = await res.text();
@@ -146,14 +140,17 @@ export default function UserList() {
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {users.map((u) => (
-            <Table.Tr key={u.userId}>
+          {users.map((u, idx) => (
+            <Table.Tr key={u.userId || idx}>
               <Table.Td>{u.username}</Table.Td>
               <Table.Td>
                 {editingId === u.userId ? (
                   <TextInput
                     value={String(editValues.fullName ?? "")}
-                    onChange={(e) => setEditValues((s) => ({ ...s, fullName: e.currentTarget.value }))}
+                    onChange={(e) => {
+                      const value = e.currentTarget.value;
+                      setEditValues((s) => ({ ...s, fullName: value }));
+                    }}
                     size="xs"
                   />
                 ) : (
@@ -164,7 +161,10 @@ export default function UserList() {
                 {editingId === u.userId ? (
                   <TextInput
                     value={String(editValues.email ?? "")}
-                    onChange={(e) => setEditValues((s) => ({ ...s, email: e.currentTarget.value }))}
+                    onChange={(e) => {
+                      const value = e.currentTarget.value;
+                      setEditValues((s) => ({ ...s, email: value }));
+                    }}
                     size="xs"
                   />
                 ) : (
@@ -175,14 +175,32 @@ export default function UserList() {
                 {editingId === u.userId ? (
                   <TextInput
                     value={String(editValues.phone ?? "")}
-                    onChange={(e) => setEditValues((s) => ({ ...s, phone: e.currentTarget.value }))}
+                    onChange={(e) => {
+                      const value = e.currentTarget.value;
+                      setEditValues((s) => ({ ...s, phone: value }));
+                    }}
                     size="xs"
                   />
                 ) : (
                   u.phone
                 )}
               </Table.Td>
-              <Table.Td>{u.role}</Table.Td>
+              <Table.Td>
+                {editingId === u.userId ? (
+                  <Select
+                    value={editValues.role || u.role}
+                    onChange={(val) => setEditValues((s) => ({ ...s, role: val || u.role }))}
+                    data={[
+                      { label: "Customer", value: "customer" },
+                      { label: "Admin", value: "Admin" },
+                    ]}
+                    size="xs"
+                    searchable
+                  />
+                ) : (
+                  u.role
+                )}
+              </Table.Td>
               <Table.Td>{u.balance.toFixed(2)} JOD</Table.Td>
               <Table.Td>
                 {editingId === u.userId ? (
@@ -222,6 +240,19 @@ export default function UserList() {
           notifications.show({ title: "Password", message: "Password reset", color: "green" });
         }}
       />
+
+      <Modal opened={roleChangeConfirm.open} onClose={() => setRoleChangeConfirm({ open: false })} title="Confirm role change">
+        <Stack gap="sm">
+          <Text>Are you sure you want to change this user's role to <strong>{roleChangeConfirm.newRole}</strong>?</Text>
+          <Group justify="flex-end">
+            <Button variant="outline" onClick={() => setRoleChangeConfirm({ open: false })}>Cancel</Button>
+            <Button color="green" onClick={() => {
+              saveEdit(roleChangeConfirm.id || "");
+              setRoleChangeConfirm({ open: false });
+            }}>Confirm</Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Paper>
   );
 }

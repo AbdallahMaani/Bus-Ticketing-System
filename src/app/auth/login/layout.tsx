@@ -3,7 +3,7 @@
 import React from "react";
 import { AppShell } from "@mantine/core";
 // import Header from "@/components/Header";
-//import Footer from "../../components/Footer";
+import Footer from "@/Components/Footer";
 
 export default function MainLayout({
   children,
@@ -19,7 +19,7 @@ export default function MainLayout({
 
       <AppShell.Main>{children}</AppShell.Main>
 
-      {/* <Footer /> */}
+       <Footer /> 
     </AppShell>
   );
 }

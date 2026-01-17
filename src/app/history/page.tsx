@@ -22,8 +22,11 @@ import {
   Alert,
 } from "@mantine/core";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Header from "@/Components/Header";
 import Footer from "@/Components/Footer";
+import { notifications } from '@mantine/notifications';
+import { apiClientFetch } from "@/lib/apiClient";
 import {
   IconHistory,
   IconTicket,
@@ -46,54 +49,39 @@ interface Booking {
   quantity: number;
 }
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://localhost:7088";
-
 export default function HistoryPage() {
   const router = useRouter();
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const { data: session, status } = useSession();
   const [tickets, setTickets] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [canceling, setCanceling] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    const userJson = localStorage.getItem("currentUser");
-    if (!userJson) {
-      setIsLoggedIn(false);
-      setLoading(false);
+    if (status === "loading") return;
+
+    if (!session?.user) {
+      router.push("/auth/login");
       return;
     }
-    setIsLoggedIn(true);
 
-    (async () => {
+    if (loading === false) return; // Prevent re-fetching if already loaded
+
+    const fetchBookings = async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem("accessToken");
-        if (!token) {
-          localStorage.clear();
-          setIsLoggedIn(false);
+        const res = await apiClientFetch("/api/Booking/my-bookings");
+
+        if (res.status === 401) {
           router.push("/auth/login");
           return;
         }
 
-        const res = await fetch(`${API_BASE_URL}/api/Booking/my-bookings`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
         if (!res.ok) {
-          if (res.status === 401) {
-            localStorage.clear();
-            setIsLoggedIn(false);
-            router.push("/auth/login");
-            return;
-          }
           console.error("Failed to load bookings", res.status);
           setTickets([]);
           return;
         }
+
         const data: Booking[] = await res.json();
         data.sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime());
         setTickets(data);
@@ -103,47 +91,36 @@ export default function HistoryPage() {
       } finally {
         setLoading(false);
       }
-    })();
-  }, [router]);
+    };
+
+    fetchBookings();
+  }, [status]);
 
   const handleCancel = async (bookingId: string) => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      localStorage.clear();
-      router.push("/auth/login");
-      return;
-    }
-
     setCanceling(prev => ({ ...prev, [bookingId]: true }));
 
     try {
-      // Correct endpoint: Booking controller, not Bus
-      const res = await fetch(`${API_BASE_URL}/api/Booking/${bookingId}`, {
+      const res = await apiClientFetch(`/api/Booking/${bookingId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
       });
 
       if (res.status === 401) {
-        // Unauthorized - token invalid
-        localStorage.clear();
         router.push("/auth/login");
         return;
       }
 
       if (res.status === 403) {
-        console.error('Failed to cancel booking. Status: 403');
-        // show client-friendly error (could be a toast)
+        notifications.show({
+          title: 'Error',
+          message: 'You do not have permission to cancel this booking',
+          color: 'red',
+        });
         return;
       }
 
       if (!res.ok) {
         const text = await res.text();
-        console.error('Failed to cancel booking. Status:', res.status, 'Message:', text);
-        return;
+        throw new Error(text || 'Failed to cancel booking');
       }
 
       // Success: update local state
@@ -154,22 +131,27 @@ export default function HistoryPage() {
             : ticket
         )
       );
-    } catch (error) {
+
+      notifications.show({
+        title: 'Success',
+        message: 'Booking cancelled successfully',
+        color: 'green',
+      });
+    } catch (error: any) {
       console.error('Error cancelling booking:', error);
+      notifications.show({
+        title: 'Error',
+        message: error.message || 'Failed to cancel booking',
+        color: 'red',
+      });
     } finally {
       setCanceling(prev => ({ ...prev, [bookingId]: false }));
     }
   };
 
-  if (loading) {
+  if (status === "loading" || loading) {
     return (
-      <Box
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
+      <Box style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
         <Header />
         <Center style={{ flex: 1 }}>
           <Stack align="center" gap="md">
@@ -182,15 +164,9 @@ export default function HistoryPage() {
     );
   }
 
-  if (!isLoggedIn) {
+  if (!session?.user) {
     return (
-      <Box
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
+      <Box style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
         <Header />
         <Container size="xl" py="xl" style={{ flex: 1 }}>
           <Center mih={400}>
@@ -203,11 +179,7 @@ export default function HistoryPage() {
                 <Text c="dimmed" ta="center">
                   Please login to view your ticket history.
                 </Text>
-                <Button
-                  size="md"
-                  onClick={() => router.push("/auth/login")}
-                  color="blue"
-                >
+                <Button size="md" onClick={() => router.push("/auth/login")} color="blue">
                   Go to Login
                 </Button>
               </Stack>
@@ -229,16 +201,12 @@ export default function HistoryPage() {
     <Table.Tr key={ticket.bookingId}>
       <Table.Td>
         <Group gap="sm">
-          <Avatar color="blue" radius="md" size="lg">
-            🚌
-          </Avatar>
+          <Avatar color="blue" radius="md" size="lg">🚌</Avatar>
           <div>
             <Text fw={600} size="sm">
               {ticket.originName} → {ticket.destinationName}
             </Text>
-            <Text size="xs" c="dimmed">
-              ID: {ticket.bookingId}
-            </Text>
+            <Text size="xs" c="dimmed">ID: {ticket.bookingId}</Text>
           </div>
         </Group>
       </Table.Td>
@@ -246,9 +214,9 @@ export default function HistoryPage() {
         <Text size="sm">{new Date(ticket.bookingDate).toLocaleDateString()}</Text>
         <Text size="xs" c="dimmed">
           {new Date(ticket.bookingDate).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
         </Text>
       </Table.Td>
       <Table.Td ta="right">
@@ -256,9 +224,7 @@ export default function HistoryPage() {
       </Table.Td>
       <Table.Td ta="center">{ticket.quantity}</Table.Td>
       <Table.Td ta="right">
-        <Text fw={600} c="blue">
-          {ticket.priceTotal.toFixed(2)} JOD
-        </Text>
+        <Text fw={600} c="blue">{ticket.priceTotal.toFixed(2)} JOD</Text>
       </Table.Td>
       <Table.Td ta="center">
         <Badge
@@ -285,27 +251,16 @@ export default function HistoryPage() {
   ));
 
   return (
-    <Box
-      style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
-    >
+    <Box style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <Header />
       <Box component="main" style={{ flex: 1, backgroundColor: "#f8f9fa" }}>
         <Container size="xl" py="xl">
           <Stack gap="xl">
             <div style={{ textAlign: "center" }}>
-              <ThemeIcon
-                size={70}
-                radius="xl"
-                color="orange"
-                variant="light"
-                mb="md"
-                mx="auto"
-              >
+              <ThemeIcon size={70} radius="xl" color="orange" variant="light" mb="md" mx="auto">
                 <IconHistory size={40} />
               </ThemeIcon>
-              <Title order={1} mb="xs">
-                My Booking History
-              </Title>
+              <Title order={1} mb="xs">My Booking History</Title>
               <Text c="dimmed" size="lg">
                 Review all your past trips and booking details
               </Text>
@@ -314,23 +269,17 @@ export default function HistoryPage() {
             <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
               <Card withBorder radius="md" p="lg" shadow="sm">
                 <Group justify="space-between">
-                  <Text size="sm" c="dimmed" tt="uppercase" fw={500}>
-                    Total Spent 
-                  </Text>
+                  <Text size="sm" c="dimmed" tt="uppercase" fw={500}>Total Spent</Text>
                   <ThemeIcon color="green" variant="light" size="lg" radius="md">
                     <IconReportMoney size={20} />
                   </ThemeIcon>
                 </Group>
-                <Text fw={700} size="2rem" mt="md">
-                  {totalSpent.toFixed(2)} JOD
-                </Text>
+                <Text fw={700} size="2rem" mt="md">{totalSpent.toFixed(2)} JOD</Text>
               </Card>
 
               <Card withBorder radius="md" p="lg" shadow="sm">
                 <Group justify="space-between">
-                  <Text size="sm" c="dimmed" tt="uppercase" fw={500}>
-                    Total Trips
-                  </Text>
+                  <Text size="sm" c="dimmed" tt="uppercase" fw={500}>Total Trips</Text>
                   <ThemeIcon color="blue" variant="light" size="lg" radius="md">
                     <IconTicket size={20} />
                   </ThemeIcon>
@@ -342,16 +291,12 @@ export default function HistoryPage() {
 
               <Card withBorder radius="md" p="lg" shadow="sm">
                 <Group justify="space-between">
-                  <Text size="sm" c="dimmed" tt="uppercase" fw={500}>
-                    Last Trip
-                  </Text>
+                  <Text size="sm" c="dimmed" tt="uppercase" fw={500}>Last Trip</Text>
                   <ThemeIcon color="orange" variant="light" size="lg" radius="md">
                     <IconCalendar size={20} />
                   </ThemeIcon>
                 </Group>
-                <Text fw={700} size="1.5rem" mt="md">
-                  {lastTrip}
-                </Text>
+                <Text fw={700} size="1.5rem" mt="md">{lastTrip}</Text>
               </Card>
             </SimpleGrid>
 
@@ -370,12 +315,7 @@ export default function HistoryPage() {
                 </Center>
               ) : (
                 <ScrollArea>
-                  <Table
-                    highlightOnHover
-                    miw={800}
-                    verticalSpacing="md"
-                    horizontalSpacing="md"
-                  >
+                  <Table highlightOnHover miw={800} verticalSpacing="md" horizontalSpacing="md">
                     <Table.Thead>
                       <Table.Tr>
                         <Table.Th>Trip Details</Table.Th>
@@ -393,12 +333,7 @@ export default function HistoryPage() {
               )}
             </Paper>
 
-            <Alert
-              icon={<IconInfoCircle size={18} />}
-              color="blue"
-              variant="light"
-              radius="md"
-            >
+            <Alert icon={<IconInfoCircle size={18} />} color="blue" variant="light" radius="md">
               <Text size="sm">
                 This history includes all your confirmed and canceled bookings.
                 For any inquiries, please contact our support team.

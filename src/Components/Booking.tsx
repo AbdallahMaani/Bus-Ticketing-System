@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import {
   Modal,
   Text,
@@ -12,9 +13,8 @@ import {
   Grid,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
+import { apiClientFetch } from '@/lib/apiClient';
 import type { Trip } from './types';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://localhost:7088";
 
 interface BookingProps {
   opened: boolean;
@@ -25,7 +25,9 @@ interface BookingProps {
 }
 
 function Booking({ opened, onClose, trip, balance, onBooked }: BookingProps) {
+  const { data: session } = useSession();
   const [quantity, setQuantity] = useState<number>(1);
+  const [loading, setLoading] = useState(false);
 
   if (!trip) return null;
   const maxAvailable = Math.max(0, trip.available_seats ?? 0);
@@ -33,71 +35,77 @@ function Booking({ opened, onClose, trip, balance, onBooked }: BookingProps) {
 
   const handleConfirm = async () => {
     if (quantity < 1) {
-      notifications.show({ title: 'Invalid quantity', message: 'Please select at least one ticket.', color: 'red' });
+      notifications.show({ 
+        title: 'Invalid quantity', 
+        message: 'Please select at least one ticket.', 
+        color: 'red' 
+      });
       return;
     }
     if (quantity > maxAvailable) {
-      notifications.show({ title: 'Not enough seats', message: `Only ${maxAvailable} seats are available.`, color: 'red' });
+      notifications.show({ 
+        title: 'Not enough seats', 
+        message: `Only ${maxAvailable} seats are available.`, 
+        color: 'red' 
+      });
       return;
     }
 
+    if (!session?.user) {
+      notifications.show({ 
+        title: 'Not authenticated', 
+        message: 'Please login first.', 
+        color: 'red' 
+      });
+      return;
+    }
+
+    setLoading(true);
     try {
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
-        notifications.show({ title: 'Not authenticated', message: 'Please login first.', color: 'red' });
-        return;
-      }
-
-      const currentUserJson = localStorage.getItem("currentUser");
-      if (!currentUserJson) {
-        notifications.show({ title: 'Error', message: 'User information not found.', color: 'red' });
-        return;
-      }
-
-      const currentUser = JSON.parse(currentUserJson);
-      const userId = currentUser.id || currentUser.userId;
-
-      if (!userId) {
-        notifications.show({ title: 'Error', message: 'User ID not found.', color: 'red' });
-        return;
-      }
-
       const bookingPayload = {
-        userId,
+        userId: session.user.id,
         tripId: trip.trip_id,
         bookingDate: new Date().toISOString(),
         bookingStatus: 'Confirmed',
         quantity,
       };
 
-      const res = await fetch(`${API_BASE_URL}/api/Booking`, {
+      const res = await apiClientFetch('/api/Booking', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
         body: JSON.stringify(bookingPayload),
       });
 
       if (!res.ok) {
         const text = await res.text();
-        notifications.show({ title: 'Booking failed', message: text || 'Unable to create booking', color: 'red' });
-        return;
+        throw new Error(text || 'Unable to create booking');
       }
 
       await res.json();
 
-      notifications.show({ title: 'Booked', message: 'Booking successful', color: 'green' });
+      notifications.show({
+        title: 'Success!',
+        message: 'Your booking has been confirmed',
+        color: 'green',
+      });
+
       onBooked?.(totalPrice);
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Booking error", err);
-      notifications.show({ title: 'Error', message: 'Network error during booking', color: 'red' });
+      notifications.show({ 
+        title: 'Booking failed', 
+        message: err.message || 'Network error during booking', 
+        color: 'red' 
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   const balanceStatusColor = balance >= totalPrice ? 'green' : 'red';
-  const balanceStatusText = balance >= totalPrice ? 'Funds are sufficient for this booking' : 'Insufficient funds to complete this booking';
+  const balanceStatusText = balance >= totalPrice 
+    ? 'Funds are sufficient for this booking' 
+    : 'Insufficient funds to complete this booking';
 
   return (
     <Modal opened={opened} onClose={onClose} centered radius="lg" size="lg">
@@ -174,11 +182,21 @@ function Booking({ opened, onClose, trip, balance, onBooked }: BookingProps) {
           <Text size="md">Your Current Balance:</Text>
           <Text fw={600} size="md">{balance.toFixed(2)} JOD</Text>
         </Group>
-        <Badge color={balanceStatusColor} variant="light" size="lg" fullWidth>{balanceStatusText}</Badge>
+        <Badge color={balanceStatusColor} variant="light" size="lg" fullWidth>
+          {balanceStatusText}
+        </Badge>
 
         <Group justify="flex-end" mt="md">
           <Button variant="outline" onClick={onClose} radius="md">Cancel</Button>
-          <Button onClick={handleConfirm} disabled={balance < totalPrice || quantity < 1 || quantity > maxAvailable} color="blue" radius="md">Confirm Booking</Button>
+          <Button 
+            onClick={handleConfirm} 
+            disabled={balance < totalPrice || quantity < 1 || quantity > maxAvailable} 
+            color="blue" 
+            radius="md"
+            loading={loading}
+          >
+            Confirm Booking
+          </Button>
         </Group>
       </Stack>
     </Modal>

@@ -15,10 +15,12 @@
     "@mantine/modals": "^8.3.10",
     "@mantine/notifications": "^8.3.10",
     "@tabler/icons-react": "^3.36.1",
+    "axios": "^1.13.2",
     "dayjs": "^1.11.19",
     "jwt-decode": "^4.0.0",
     "maplibre-gl": "^5.15.0",
     "next": "16.0.10",
+    "next-auth": "^5.0.0-beta.30",
     "react": "19.2.1",
     "react-dom": "19.2.1"
   },

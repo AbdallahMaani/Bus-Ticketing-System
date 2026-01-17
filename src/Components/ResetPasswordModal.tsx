@@ -3,13 +3,11 @@
 import React, { useState } from "react";
 import { Modal, PasswordInput, Button, Group, Stack } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-
-const API = process.env.NEXT_PUBLIC_API_URL || "https://localhost:7088";
+import { apiClientFetch } from "@/lib/apiClient";
 
 export default function ResetPasswordModal({ opened, onClose, userId, onDone }: { opened: boolean; onClose: () => void; userId?: string; onDone?: () => void; }) {
   const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
 
   const handleReset = async () => {
     if (!userId) return;
@@ -19,14 +17,11 @@ export default function ResetPasswordModal({ opened, onClose, userId, onDone }: 
     }
     setLoading(true);
     try {
-      const res = await fetch(`${API}/api/user/${userId}/reset-password`, {
+      const res = await apiClientFetch(`/api/User/${userId}/reset-password`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
         body: JSON.stringify({ newPassword }),
       });
+      
       if (!res.ok) {
         const txt = await res.text();
         throw new Error(txt || "Reset failed");

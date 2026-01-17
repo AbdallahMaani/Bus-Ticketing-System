@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useSession, signOut } from "next-auth/react";
 import {
   Avatar,
   Badge,
@@ -15,130 +15,55 @@ import {
   UnstyledButton,
   Skeleton,
 } from "@mantine/core";
-
-// Structure matches your C# UserDTOs exactly
-interface UserProfile {
-  userId: string;
-  username: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  role: string;
-  balance: number;
-}
-
-interface CurrentUser {
-  userId: string;
-  username: string;
-  fullName: string;
-  email?: string;
-  phone?: string;
-  role: string;
-  balance: number;
-}
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://localhost:7088";
+import { logoutUser, apiClientFetch } from "@/lib/apiClient";
+import { IconWallet, IconLogout, IconUser, IconHistory, IconShieldCheck, IconDashboard, IconHome } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
 
 function Header() {
   const router = useRouter();
   const pathname = usePathname();
+  const { data: session, status } = useSession();
+  const [balance, setBalance] = useState<number>(0);
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [displayName, setDisplayName] = useState("User");
-  const [balance, setBalance] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const isLoading = status === "loading";
+  const isLoggedIn = !!session?.user;
 
-  // Fetch fresh user data from Backend API
-  const fetchUserProfile = async () => {
-    setLoading(true);
+  // Fetch balance from API to ensure it's always up-to-date
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    const fetchBalance = async () => {
+      try {
+        const res = await apiClientFetch("/api/User/me");
+        if (res.ok) {
+          const data = await res.json();
+          setBalance(data.balance || 0);
+        } else {
+          console.error("Failed to fetch balance:", res.status);
+        }
+      } catch (err) {
+        console.error("Error fetching balance:", err);
+      }
+    };
+
+    fetchBalance();
+  }, [isLoggedIn]);
+
+  const handleLogout = async () => {
     try {
-      const accessToken = localStorage.getItem("accessToken");
-      const userJson = localStorage.getItem("currentUser");
-
-      // Check if user is logged in
-      if (!accessToken || !userJson) {
-        setIsLoggedIn(false);
-        setLoading(false);
-        return;
-      }
-
-      const storedUser: CurrentUser = JSON.parse(userJson);
-
-      // Step 1: Show cached data immediately (optimistic update)
-      setIsLoggedIn(true);
-      setDisplayName(storedUser.fullName || storedUser.username);
-      setBalance(storedUser.balance);
-
-      // Step 2: Fetch fresh data from Backend API
-      // Endpoint: GET /api/user/me
-      // This gives us the real-time balance and profile info
-      const response = await fetch("https://localhost:7088/api/user/me", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`,
-        },
-      });
-
-      if (response.ok) {
-        // Step 3: Update with real data from Backend
-        const freshData: UserProfile = await response.json();
-
-        // Update state with backend data
-        setDisplayName(freshData.fullName);
-        setBalance(freshData.balance);
-
-        // Update localStorage with fresh data
-        const updatedUser: CurrentUser = {
-          userId: freshData.userId,
-          username: freshData.username,
-          fullName: freshData.fullName,
-          email: freshData.email,
-          phone: freshData.phone,
-          role: freshData.role,
-          balance: freshData.balance,
-        };
-        localStorage.setItem("currentUser", JSON.stringify(updatedUser));
-
-        console.log(`✅ Profile refreshed for ${freshData.fullName}`);
-      } else if (response.status === 401) {
-        // Token expired or invalid
-        console.warn("⚠️ Token expired, logging out");
-        handleLogout();
-      }
+      await logoutUser(); // Call backend logout endpoint
+      await signOut({ redirect: false }); // Clear NextAuth session
+      router.push("/auth/login");
+      router.refresh();
     } catch (error) {
-      console.error("❌ Error fetching profile:", error);
-      // Keep showing cached data if API call fails
-    } finally {
-      setLoading(false);
+      console.error("Logout error:", error);
+      // Still sign out locally even if backend fails
+      await signOut({ redirect: false });
+      router.push("/auth/login");
     }
   };
 
-  // Fetch profile when component mounts or when pathname changes
-  useEffect(() => {
-    fetchUserProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
-
-  const handleLogout = () => {
-    // Clear all localStorage
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("currentUser");
-
-    // Reset state
-    setIsLoggedIn(false);
-    setDisplayName("User");
-    setBalance(0);
-
-    // Redirect to login
-    router.push("/auth/login");
-    router.refresh();
-  };
-
   const handleTopUp = () => {
-    // Navigate to top-up page
     router.push("/TopUp");
   };
 
@@ -159,16 +84,17 @@ function Header() {
           <Button
             component={Link}
             href="/"
-            variant="subtle"
+            variant={pathname === "/" ? "filled" : "subtle"}
             size="md"
             radius="lg"
+            leftSection={<IconHome size={18} />}
           >
             Home
           </Button>
           <Button
             component={Link}
             href="/history"
-            variant="subtle"
+            variant={pathname === "/history" ? "filled" : "subtle"}
             size="md"
             radius="lg"
           >
@@ -177,67 +103,108 @@ function Header() {
           <Button
             component={Link}
             href="/about"
-            variant="subtle"
+            variant={pathname === "/about" ? "filled" : "subtle"}
             size="md"
             radius="lg"
           >
             About
           </Button>
+          {/* Admin Dashboard Button - Only show if user is Admin */}
+          {isLoggedIn && (session.user as any)?.role === "Admin" && (
+            <Button
+              component={Link}
+              href="/admin"
+              variant={pathname === "/admin" ? "filled" : "subtle"}
+              size="md"
+              radius="lg"
+              color="orange"
+              leftSection={<IconDashboard size={18} />}
+            >
+              Admin Dashboard
+            </Button>
+          )}
         </Group>
 
         {/* User Menu or Login */}
-        {isLoggedIn ? (
+        {isLoading ? (
+          <Group gap="md">
+            <Skeleton height={40} width={120} radius="lg" />
+          </Group>
+        ) : isLoggedIn && session.user ? (
           <Menu width={280} position="bottom-end" shadow="xl">
             <Menu.Target>
               <UnstyledButton style={{ cursor: "pointer" }}>
                 <Group gap="md">
                   <Box ta="right">
-                    {loading ? (
-                      <>
-                        <Skeleton height={24} width={150} mb={8} />
-                        <Skeleton height={20} width={100} />
-                      </>
-                    ) : (
-                      <>
-                        <Text fw={600} size="sm" c="dark">
-                          {displayName}
-                        </Text>
-                        <Badge
-                          size="md"
-                          variant="light"
-                          color="green"
-                          onClick={handleTopUp}
-                          style={{ cursor: "pointer" }}
-                        >
-                          {balance.toFixed(2)} JD
-                        </Badge>
-                      </>
-                    )}
+                    <Text fw={600} size="sm" c="dark">
+                      {session.user.fullName || session.user.username}
+                    </Text>
+                    <Badge
+                      size="md"
+                      variant="light"
+                      color="green"
+                      onClick={handleTopUp}
+                      style={{ cursor: "pointer" }}
+                    >
+                      {(balance || session?.user?.balance || 0).toFixed(2)} JD
+                    </Badge>
                   </Box>
                   <Avatar
                     radius="xl"
                     color="blue"
                     size="lg"
-                    name={displayName}
                   >
+                    {session.user.username?.[0]?.toUpperCase() || 'U'}
                   </Avatar>
                 </Group>
               </UnstyledButton>
             </Menu.Target>
 
             <Menu.Dropdown>
-              <Menu.Item component={Link} href="/myprofile">
+              <Menu.Label>Account</Menu.Label>
+              <Menu.Item 
+                component={Link} 
+                href="/myprofile"
+                leftSection={<IconUser size={16} />}
+              >
                 My Profile
               </Menu.Item>
-              <Menu.Item component={Link} href="/history">
+              <Menu.Item 
+                component={Link} 
+                href="/history"
+                leftSection={<IconHistory size={16} />}
+              >
                 My Bookings
               </Menu.Item>
+              {/* Admin Menu Item - Only show if user is Admin */}
+              {(session.user as any)?.role === "Admin" && (
+                <>
+                  <Menu.Divider />
+                  <Menu.Item 
+                    component={Link} 
+                    href="/admin"
+                    leftSection={<IconDashboard size={16} />}
+                    color="orange"
+                  >
+                    Admin Dashboard
+                  </Menu.Item>
+                </>
+              )}
               <Menu.Divider />
-              <Menu.Item component={Link} href="/TopUp" color="green">
+              <Menu.Item 
+                component={Link} 
+                href="/TopUp" 
+                color="green"
+                leftSection={<IconWallet size={16} />}
+              >
                 Top Up Balance
               </Menu.Item>
               <Menu.Divider />
-              <Menu.Item color="red" onClick={handleLogout}>
+              <Menu.Item 
+                color="red" 
+                onClick={handleLogout}
+                leftSection={<IconLogout size={16} />}
+              >
                 Logout
               </Menu.Item>
             </Menu.Dropdown>

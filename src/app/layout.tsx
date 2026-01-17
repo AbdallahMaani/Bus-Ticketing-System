@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ColorSchemeScript, MantineProvider } from "@mantine/core";
+import { Notifications } from '@mantine/notifications';
+import { SessionProvider } from "next-auth/react";
 import "@mantine/core/styles.css";
-import "./globals.css";
+import '@mantine/notifications/styles.css';
 //import { TicketProvider } from "@/Components/TicketStore";
 
 const geistSans = Geist({
@@ -28,14 +30,14 @@ export default function RootLayout({ children, }: Readonly<{ children: React.Rea
         <ColorSchemeScript />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        {/*<MantineProvider>{children}</MantineProvider>
-        <TicketProvider>{children}</TicketProvider> children rendered only one time */} 
-        <MantineProvider>
-          {/*<TicketProvider> /* TicketProvider wraps the entire app to provide ticket context */}
-            {children}
-          {/*</TicketProvider>}*/}
-        </MantineProvider>
-
+        <SessionProvider>
+          <MantineProvider>
+            <Notifications />
+            {/*<TicketProvider> /* TicketProvider wraps the entire app to provide ticket context */}
+              {children}
+            {/*</TicketProvider>}*/}
+          </MantineProvider>
+        </SessionProvider>
       </body>
     </html>
   );
