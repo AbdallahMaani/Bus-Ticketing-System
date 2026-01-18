@@ -45,8 +45,8 @@ export default function TicketsResults({
         radius="lg"
         style={{ 
           textAlign: "center",
-          background: "linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(234, 179, 8, 0.05) 100%)",
-          border: "1.5px solid rgba(239, 68, 68, 0.2)",
+          background: "linear-gradient(135deg, rgba(68, 156, 239, 0.05) 0%,rgba(8, 98, 234, 0.05)) 100%)",
+          border: "1.5px solid rgba(68, 136, 239, 0.2)",
         }}
       >
         <Text size="lg" fw={600} c="dimmed">

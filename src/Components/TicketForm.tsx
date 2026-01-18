@@ -147,7 +147,7 @@ export default function TicketForm({
           <Title order={2} style={{ color: "#1e40af" }} ta="center" fw={800}>
             Find Your Trip
           </Title>
-          <Text size="sm" c="dimmed" ta="center" mt="xs">
+          <Text size="md" c="dimmed" ta="center" mt="xs">
             Search and book your journey easily
           </Text>
         </Box>

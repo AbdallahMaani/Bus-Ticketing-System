@@ -82,12 +82,6 @@ function Booking({ opened, onClose, trip, balance, onBooked }: BookingProps) {
 
       await res.json();
 
-      notifications.show({
-        title: 'Success!',
-        message: 'Your booking has been confirmed',
-        color: 'green',
-      });
-
       onBooked?.(totalPrice);
       onClose();
     } catch (err: any) {

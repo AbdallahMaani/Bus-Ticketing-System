@@ -15,7 +15,7 @@ import {
   Stack,
   Badge,
 } from "@mantine/core";
-import { IconTrash, IconRefresh, IconPencil } from "@tabler/icons-react";
+import { IconRefresh, IconPencil } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { apiClientFetch } from "@/lib/apiClient";
 import { Select, TextInput } from "@mantine/core";
@@ -84,7 +84,13 @@ export default function BookingsTable() {
       const res = await apiClientFetch("/api/Booking");
       if (!res.ok) throw new Error(`Failed to load bookings (${res.status})`);
       const data = await res.json();
-      const bookingsData = Array.isArray(data) ? data : [];
+      let bookingsData = Array.isArray(data) ? data : [];
+      
+      // Sort bookings by date - newest first
+      bookingsData.sort((a: BookingDto, b: BookingDto) => {
+        return new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime();
+      });
+      
       setBookings(bookingsData);
       
       const userIds = bookingsData.map((b: BookingDto) => b.userId).filter(Boolean);
