@@ -34,6 +34,9 @@ import {
   IconReportMoney,
   IconAlertCircle,
   IconInfoCircle,
+  IconMapPin,
+  IconClock,
+  IconX,
 } from "@tabler/icons-react";
 
 interface Booking {
@@ -154,9 +157,14 @@ export default function HistoryPage() {
       <Box style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
         <Header />
         <Center style={{ flex: 1 }}>
-          <Stack align="center" gap="md">
-            <Loader size="lg" />
-            <Text c="dimmed">Loading your history...</Text>
+          <Stack align="center" gap="lg">
+            <ThemeIcon size={80} radius="lg" variant="gradient" gradient={{ from: "#0685d9ff", to: "#0b8cf5ff", deg: 90 }}>
+              <IconHistory size={44} stroke={1.5} />
+            </ThemeIcon>
+            <Stack align="center" gap="xs">
+              <Loader size="lg" />
+              <Text c="dimmed" fw={500}>Loading your booking history...</Text>
+            </Stack>
           </Stack>
         </Center>
         <Footer />
@@ -166,20 +174,22 @@ export default function HistoryPage() {
 
   if (!session?.user) {
     return (
-      <Box style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <Box style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "linear-gradient(135deg, rgba(6, 133, 217, 0.05) 0%, rgba(11, 140, 245, 0.08) 100%)" }}>
         <Header />
         <Container size="xl" py="xl" style={{ flex: 1 }}>
           <Center mih={400}>
-            <Paper withBorder p="xl" radius="lg" shadow="sm">
-              <Stack align="center" gap="md">
-                <ThemeIcon size={60} radius="xl" color="red">
-                  <IconAlertCircle size={30} />
+            <Paper withBorder p="xl" radius="lg" shadow="lg" style={{ border: "1px solid rgba(6, 133, 217, 0.2)" }}>
+              <Stack align="center" gap="lg">
+                <ThemeIcon size={80} radius="lg" variant="gradient" gradient={{ from: "#dc2626", to: "#ef4444", deg: 90 }}>
+                  <IconAlertCircle size={44} stroke={1.5} />
                 </ThemeIcon>
-                <Title order={3}>You are not logged in</Title>
-                <Text c="dimmed" ta="center">
-                  Please login to view your ticket history.
-                </Text>
-                <Button size="md" onClick={() => router.push("/auth/login")} color="blue">
+                <Stack align="center" gap="sm">
+                  <Title order={2}>Authentication Required</Title>
+                  <Text c="dimmed" ta="center" size="md">
+                    Please login to view your ticket history and bookings.
+                  </Text>
+                </Stack>
+                <Button size="lg" onClick={() => router.push("/auth/login")} variant="gradient" gradient={{ from: "#0685d9ff", to: "#0b8cf5ff", deg: 90 }} fw={600}>
                   Go to Login
                 </Button>
               </Stack>
@@ -198,51 +208,66 @@ export default function HistoryPage() {
   const lastTrip = tickets.length ? new Date(tickets[0].bookingDate).toLocaleDateString() : "-";
 
   const rows = tickets.map((ticket) => (
-    <Table.Tr key={ticket.bookingId}>
+    <Table.Tr key={ticket.bookingId} style={{ borderBottom: "1px solid rgba(217, 119, 6, 0.1)" }}>
       <Table.Td>
         <Group gap="sm">
-          <Avatar color="blue" radius="md" size="lg">🚌</Avatar>
+          <ThemeIcon color="blue" variant="light" size="lg" radius="md">
+            <IconMapPin size={18} stroke={2} />
+          </ThemeIcon>
           <div>
-            <Text fw={600} size="sm">
+            <Text fw={600} size="sm" c="#0685d9ff">
               {ticket.originName} → {ticket.destinationName}
             </Text>
-            <Text size="xs" c="dimmed">ID: {ticket.bookingId}</Text>
+            <Text size="xs" c="dimmed">ID: {ticket.bookingId.substring(0, 12)}...</Text>
           </div>
         </Group>
       </Table.Td>
       <Table.Td>
-        <Text size="sm">{new Date(ticket.bookingDate).toLocaleDateString()}</Text>
-        <Text size="xs" c="dimmed">
-          {new Date(ticket.bookingDate).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </Text>
+        <Group gap="xs">
+          <ThemeIcon color="orange" variant="light" size="md" radius="md">
+            <IconClock size={14} stroke={2} />
+          </ThemeIcon>
+          <div>
+            <Text fw={500} size="sm">{new Date(ticket.bookingDate).toLocaleDateString()}</Text>
+            <Text size="xs" c="dimmed">
+              {new Date(ticket.bookingDate).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </Text>
+          </div>
+        </Group>
       </Table.Td>
       <Table.Td ta="right">
-        <Text fw={500}>{(ticket.priceTotal / ticket.quantity).toFixed(2)} JOD</Text>
+        <Text fw={500} size="sm">{(ticket.priceTotal / ticket.quantity).toFixed(2)} JOD</Text>
       </Table.Td>
-      <Table.Td ta="center">{ticket.quantity}</Table.Td>
+      <Table.Td ta="center">
+        <Badge color="gray" variant="light" size="md">{ticket.quantity}</Badge>
+      </Table.Td>
       <Table.Td ta="right">
-        <Text fw={600} c="blue">{ticket.priceTotal.toFixed(2)} JOD</Text>
+        <Text fw={700} c="#0685d9ff" size="md">{ticket.priceTotal.toFixed(2)} JOD</Text>
       </Table.Td>
       <Table.Td ta="center">
         <Badge
           color={ticket.bookingStatus === "Confirmed" ? "green" : "red"}
           variant="light"
-          radius="sm"
+          radius="md"
+          size="lg"
+          fw={600}
         >
           {ticket.bookingStatus}
         </Badge>
       </Table.Td>
       <Table.Td ta="center">
         <Button
-          size="xs"
+          size="sm"
           color="red"
-          variant="outline"
+          variant="light"
           disabled={ticket.bookingStatus !== 'Confirmed'}
           onClick={() => handleCancel(ticket.bookingId)}
           loading={Boolean(canceling[ticket.bookingId])}
+          leftSection={<IconX size={14} />}
+          fw={600}
         >
           Cancel
         </Button>
@@ -253,78 +278,82 @@ export default function HistoryPage() {
   return (
     <Box style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <Header />
-      <Box component="main" style={{ flex: 1, backgroundColor: "#f8f9fa" }}>
+      <Box component="main" style={{ flex: 1, background: "linear-gradient(135deg, rgba(6, 133, 217, 0.03) 0%, rgba(11, 140, 245, 0.05) 100%)" }}>
         <Container size="xl" py="xl">
           <Stack gap="xl">
             <div style={{ textAlign: "center" }}>
-              <ThemeIcon size={70} radius="xl" color="orange" variant="light" mb="md" mx="auto">
-                <IconHistory size={40} />
+              <ThemeIcon size={80} radius="lg" variant="gradient" gradient={{ from: "#0685d9ff", to: "#0b8cf5ff", deg: 90 }} mb="md" mx="auto">
+                <IconHistory size={44} stroke={1.5} />
               </ThemeIcon>
-              <Title order={1} mb="xs">My Booking History</Title>
-              <Text c="dimmed" size="lg">
+              <Title order={1} mb="xs" fw={800} size="2.5rem" c="#0685d9ff">My Booking History</Title>
+              <Text c="dimmed" size="lg" fw={500}>
                 Review all your past trips and booking details
               </Text>
             </div>
 
             <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
-              <Card withBorder radius="md" p="lg" shadow="sm">
-                <Group justify="space-between">
-                  <Text size="sm" c="dimmed" tt="uppercase" fw={500}>Total Spent</Text>
-                  <ThemeIcon color="green" variant="light" size="lg" radius="md">
-                    <IconReportMoney size={20} />
+              <Card withBorder radius="lg" p="lg" shadow="md" style={{ border: "1px solid rgba(6, 133, 217, 0.2)", background: "rgba(255, 255, 255, 0.9)" }}>
+                <Group justify="space-between" mb="md">
+                  <Text size="lg" c="dimmed" tt="uppercase" fw={600}>Total Spent</Text>
+                  <ThemeIcon color="green" variant="gradient" gradient={{ from: "#22c55e", to: "#16a34a", deg: 90 }} size="lg" radius="md">
+                    <IconReportMoney size={20} stroke={2} />
                   </ThemeIcon>
                 </Group>
-                <Text fw={700} size="2rem" mt="md">{totalSpent.toFixed(2)} JOD</Text>
+                <Text fw={800} size="2.2rem" c="#22c55e">{totalSpent.toFixed(2)}</Text>
+                <Text size="md" c="dimmed" fw={500}>JOD</Text>
               </Card>
 
-              <Card withBorder radius="md" p="lg" shadow="sm">
-                <Group justify="space-between">
-                  <Text size="sm" c="dimmed" tt="uppercase" fw={500}>Total Trips</Text>
-                  <ThemeIcon color="blue" variant="light" size="lg" radius="md">
-                    <IconTicket size={20} />
+              <Card withBorder radius="lg" p="lg" shadow="md" style={{ border: "1px solid rgba(6, 133, 217, 0.2)", background: "rgba(255, 255, 255, 0.9)" }}>
+                <Group justify="space-between" mb="md">
+                  <Text size="lg" c="dimmed" tt="uppercase" fw={600}>Total Trips</Text>
+                  <ThemeIcon color="blue" variant="gradient" gradient={{ from: "#0685d9ff", to: "#0b8cf5ff", deg: 90 }} size="lg" radius="md">
+                    <IconTicket size={20} stroke={2} />
                   </ThemeIcon>
                 </Group>
-                <Text fw={700} size="2rem" mt="md">
+                <Text fw={800} size="2.2rem" c="#0685d9ff">
                   {tickets.filter(t => t.bookingStatus !== "Cancelled").length}
                 </Text>
+                <Text size="md" c="dimmed" fw={500}>Confirmed</Text>
               </Card>
 
-              <Card withBorder radius="md" p="lg" shadow="sm">
-                <Group justify="space-between">
-                  <Text size="sm" c="dimmed" tt="uppercase" fw={500}>Last Trip</Text>
-                  <ThemeIcon color="orange" variant="light" size="lg" radius="md">
-                    <IconCalendar size={20} />
+              <Card withBorder radius="lg" p="lg" shadow="md" style={{ border: "1px solid rgba(6, 133, 217, 0.2)", background: "rgba(255, 255, 255, 0.9)" }}>
+                <Group justify="space-between" mb="md">
+                  <Text size="lg" c="dimmed" tt="uppercase" fw={600}>Last Trip</Text>
+                  <ThemeIcon color="orange" variant="gradient" gradient={{ from: "#f59e0b", to: "#d97706", deg: 90 }} size="lg" radius="md">
+                    <IconCalendar size={20} stroke={2} />
                   </ThemeIcon>
                 </Group>
-                <Text fw={700} size="1.5rem" mt="md">{lastTrip}</Text>
+                <Text fw={800} size="1.8rem" c="#d97706">{lastTrip}</Text>
               </Card>
             </SimpleGrid>
 
-            <Paper withBorder radius="md" p="lg" shadow="sm">
+            <Paper withBorder radius="lg" p="lg" shadow="md" style={{ border: "1px solid rgba(217, 119, 6, 0.1)", background: "rgba(255, 255, 255, 0.95)" }}>
               {tickets.length === 0 ? (
-                <Center mih={200}>
-                  <Stack align="center" gap="sm">
-                    <ThemeIcon size={50} radius="xl" variant="light">
-                      <IconInfoCircle size={30} />
+                <Center mih={250}>
+                  <Stack align="center" gap="md">
+                    <ThemeIcon size={70} radius="lg" variant="light" color="gray">
+                      <IconInfoCircle size={38} stroke={1.5} />
                     </ThemeIcon>
-                    <Text c="dimmed">No tickets found.</Text>
-                    <Text size="sm" c="dimmed">
-                      When you book a ticket, it will appear here.
-                    </Text>
+                    <Stack align="center" gap="xs">
+                      <Text fw={600} size="lg">No bookings yet</Text>
+                      <Text size="sm" c="dimmed">
+                        When you book a ticket, it will appear here.
+                      </Text>
+                    </Stack>
                   </Stack>
                 </Center>
               ) : (
                 <ScrollArea>
-                  <Table highlightOnHover miw={800} verticalSpacing="md" horizontalSpacing="md">
-                    <Table.Thead>
+                  <Table highlightOnHover miw={800} verticalSpacing="sm" horizontalSpacing="md" fontSize="md">
+                    <Table.Thead style={{ background: "rgba(217, 119, 6, 0.05)" }}>
                       <Table.Tr>
-                        <Table.Th>Trip Details</Table.Th>
-                        <Table.Th>Date & Time</Table.Th>
-                        <Table.Th ta="right">Price</Table.Th>
-                        <Table.Th ta="center">Quantity</Table.Th>
-                        <Table.Th ta="right">Total</Table.Th>
-                        <Table.Th ta="center">Status</Table.Th>
-                        <Table.Th ta="center">Actions</Table.Th>
+                        <Table.Th fw={700}>Trip Details</Table.Th>
+                        <Table.Th fw={700}>Date & Time</Table.Th>
+                        <Table.Th ta="right" fw={700}>Price</Table.Th>
+                        <Table.Th ta="center" fw={700}>Qty</Table.Th>
+                        <Table.Th ta="right" fw={700}>Total</Table.Th>
+                        <Table.Th ta="center" fw={700}>Status</Table.Th>
+                        <Table.Th ta="center" fw={700}>Action</Table.Th>
                       </Table.Tr>
                     </Table.Thead>
                     <Table.Tbody>{rows}</Table.Tbody>
@@ -333,10 +362,9 @@ export default function HistoryPage() {
               )}
             </Paper>
 
-            <Alert icon={<IconInfoCircle size={18} />} color="blue" variant="light" radius="md">
-              <Text size="sm">
-                This history includes all your confirmed and canceled bookings.
-                For any inquiries, please contact our support team.
+            <Alert icon={<IconInfoCircle size={18} />} color="blue" variant="light" radius="lg" style={{ border: "1px solid rgba(6, 133, 217, 0.2)" }}>
+              <Text size="sm" fw={500}>
+                This history includes all your confirmed and canceled bookings. For any inquiries, contact our support team.
               </Text>
             </Alert>
           </Stack>

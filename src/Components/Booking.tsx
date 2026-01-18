@@ -10,7 +10,7 @@ import {
   NumberInput,
   Divider,
   Badge,
-  Grid,
+  Box,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { apiClientFetch } from '@/lib/apiClient';
@@ -108,91 +108,155 @@ function Booking({ opened, onClose, trip, balance, onBooked }: BookingProps) {
     : 'Insufficient funds to complete this booking';
 
   return (
-    <Modal opened={opened} onClose={onClose} centered radius="lg" size="lg">
+    <Modal 
+      opened={opened} 
+      onClose={onClose} 
+      centered 
+      radius="lg" 
+      size="lg"
+    >
       <Stack gap="md">
-        <Group align="center" gap="xs">
-          <Text fw={700} size="xl">{trip.origin_name} → {trip.destination_name}</Text>
-        </Group>
+        {/* Header */}
+        <Box>
+          <Text fw={800} size="xl" c="#1e40af" mb="4px">
+            {trip.origin_name} → {trip.destination_name}
+          </Text>
+          <Text size="lg" c="dimmed">
+            {trip.departure_date} at {trip.departure_time}
+          </Text>
+        </Box>
 
-        <Group gap="sm">
-          <Text size="sm">Date: <Text span fw={500}>{trip.departure_date}</Text></Text>
-          <Text size="sm">Time: <Text span fw={500}>{trip.departure_time}</Text></Text>
-        </Group>
+        {/* Trip Details */}
+        <Box
+          p="md"
+          style={{
+            borderRadius: "12px",
+            background: "rgba(59, 130, 246, 0.05)",
+            border: "1px solid rgba(59, 130, 246, 0.1)",
+          }}
+        >
+          <Group justify="space-between" mb="md">
+            <div>
+              <Text size="sm" c="dimmed" fw={500}>Driver</Text>
+              <Text size="xl" fw={600}>{trip.driver_name || 'N/A'}</Text>
+            </div>
+            <div>
+              <Text size="sm" c="dimmed" fw={500}>Available Seats</Text>
+              <Text size="xl" fw={600}>{maxAvailable}</Text>
+            </div>
+          </Group>
+          <Text size="sm" c="dimmed" fw={500}>Station</Text>
+          <Text size="xl" fw={600}>{trip.origin_station_name || 'N/A'}</Text>
+        </Box>
 
-        <Grid gutter="sm">
-          <Grid.Col span={{ base: 12, sm: 6 }}>
-            <Stack gap="xs">
-              <div>
-                <Text size="xs" c="dimmed" fw={500}>Driver Name</Text>
-                <Text size="sm" fw={600}>{trip.driver_name || 'N/A'}</Text>
-              </div>
-              <div>
-                <Text size="xs" c="dimmed" fw={500}>Departure Station</Text>
-                <Text size="sm" fw={600}>{trip.origin_station || trip.station_name || 'N/A'}</Text>
-              </div>
-            </Stack>
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6 }}>
-            <Stack gap="xs">
-              <div>
-                <Text size="xs" c="dimmed" fw={500}>Departure Street</Text>
-                <Text size="sm" fw={600}>{trip.origin_street || 'N/A'}</Text>
-              </div>
-              <div>
-                <Text size="xs" c="dimmed" fw={500}>Available Seats</Text>
-                <Text size="sm" fw={600}>{maxAvailable}</Text>
-              </div>
-            </Stack>
-          </Grid.Col>
-        </Grid>
-
+        {/* Features */}
         {trip.features && trip.features.length > 0 && (
-          <div>
-            <Text size="xs" c="dimmed" fw={500} mb="xs">Bus Features</Text>
+          <Box>
+            <Text size="xl" fw={600} mb="xs">Features</Text>
             <Group gap="xs">
               {trip.features.map((feature, idx) => (
-                <Badge key={idx} size="sm" variant="light" color="blue">{feature}</Badge>
+                <Badge key={idx} variant="light" size="lg">
+                  {feature}
+                </Badge>
               ))}
             </Group>
-          </div>
+          </Box>
         )}
 
-        <Divider my="xs" />
+        <Divider />
 
-        <Text size="md">Price per ticket: <Text span fw={600}>{trip.price_JOD.toFixed(2)} JOD</Text></Text>
+        {/* Pricing */}
+        <Box>
+          <Group justify="space-between" mb="lg">
+            <Text size="xl" fw={500}>Price per ticket</Text>
+            <Text size="xl" fw={700}>{trip.price_JOD.toFixed(2)} JOD</Text>
+          </Group>
 
-        <NumberInput 
-          label="Number of Tickets" 
-          description={`Available seats: ${maxAvailable}`} 
-          min={1} 
-          max={maxAvailable} 
-          value={quantity} 
-          onChange={(v) => setQuantity(Number(v) ?? 1)} 
-          styles={{ input: { width: 120 } }} 
-          radius="md" 
-        />
+          <NumberInput 
+            label="Number of Tickets" 
+            min={1} 
+            max={maxAvailable} 
+            value={quantity} 
+            onChange={(v) => setQuantity(Number(v) ?? 1)}
+            radius="lg"
+            size="lg"
+          />
+        </Box>
 
-        <Divider my="xs" />
-        <Group justify="space-between" align="center">
-          <Text fw={700} size="lg">Total Amount:</Text>
-          <Badge size="xl" variant="light" color="blue" py="sm">{totalPrice.toFixed(2)} JOD</Badge>
-        </Group>
-        <Divider my="xs" />
-        <Group justify="space-between" align="center">
-          <Text size="md">Your Current Balance:</Text>
-          <Text fw={600} size="md">{balance.toFixed(2)} JOD</Text>
-        </Group>
-        <Badge color={balanceStatusColor} variant="light" size="lg" fullWidth>
-          {balanceStatusText}
-        </Badge>
+        {/* Total */}
+        <Box
+          p="lg"
+          style={{
+            borderRadius: "12px",
+            background: "linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(34, 197, 94, 0.08) 100%)",
+            border: "1px solid rgba(59, 130, 246, 0.15)",
+          }}
+        >
+          <Group justify="space-between" align="center">
+            <Text fw={700} size="xl">Total</Text>
+            <Badge 
+              size="xl"
+              variant="gradient"
+              gradient={{ from: "blue", to: "cyan", deg: 90 }}
+              fw={700}
+            >
+              {totalPrice.toFixed(2)} JOD
+            </Badge>
+          </Group>
+        </Box>
 
-        <Group justify="flex-end" mt="md">
-          <Button variant="outline" onClick={onClose} radius="md">Cancel</Button>
+        {/* Balance Status */}
+        <Box
+          p="lg"
+          style={{
+            borderRadius: "12px",
+            background: balance >= totalPrice 
+              ? "rgba(34, 197, 94, 0.05)"
+              : "rgba(239, 68, 68, 0.05)",
+            border: balance >= totalPrice 
+              ? "1px solid rgba(34, 197, 94, 0.2)"
+              : "1px solid rgba(239, 68, 68, 0.2)",
+          }}
+        >
+          <Group justify="space-between" mb="xs">
+            <Text size="xl" fw={500}>Your Balance</Text>
+            <Text 
+              fw={700} 
+              size="xl"
+              c={balance >= totalPrice ? "green" : "red"}
+            >
+              {balance.toFixed(2)} JOD
+            </Text>
+          </Group>
+          <Badge 
+            color={balanceStatusColor} 
+            variant="light" 
+            fullWidth
+            fw={600}
+          >
+            {balanceStatusText}
+          </Badge>
+        </Box>
+
+        {/* Buttons */}
+        <Group justify="flex-end" gap="lg">
+          <Button 
+            variant="light" 
+            onClick={onClose} 
+            radius="lg"
+            size="md"
+            fw={700}
+          >
+            Cancel
+          </Button>
           <Button 
             onClick={handleConfirm} 
             disabled={balance < totalPrice || quantity < 1 || quantity > maxAvailable} 
-            color="blue" 
-            radius="md"
+            variant="gradient"
+            gradient={{ from: "green", to: "teal", deg: 90 }}
+            radius="lg"
+            fw={700}
+            size="md"
             loading={loading}
           >
             Confirm Booking

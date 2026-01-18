@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -37,32 +38,34 @@ export default function CitiesTable() {
 
   if (loading) {
     return (
-      <Paper withBorder p="md">
+      <Paper withBorder p="lg" radius="lg">
         <Center><Loader /></Center>
       </Paper>
     );
   }
 
   return (
-    <Paper withBorder p="md" radius="md">
-      <Group justify="space-between" mb="sm">
-        <Text fw={700}>Cities ({cities.length})</Text>
-        <Button size="xs" variant="outline" onClick={fetchCities} leftSection={<IconRefresh size={16} />}>Refresh</Button>
+    <Paper withBorder p="lg" radius="lg">
+      <Group justify="space-between" mb="lg">
+        <Text fw={800} size="xl">Cities ({cities.length})</Text>
+        <Button size="md" variant="gradient" gradient={{ from: "#0685d9ff", to: "#0b8cf5ff", deg: 90 }} onClick={fetchCities} leftSection={<IconRefresh size={16} />} fw={600}>Refresh</Button>
       </Group>
 
-      <div style={{ overflowX: "auto" }}>
-        <Table verticalSpacing="sm" striped highlightOnHover>
-          <Table.Thead>
+      <div style={{ overflowX: "auto", borderRadius: "12px", border: "1px solid rgba(6, 150, 217, 0.1)" }}>
+        <Table verticalSpacing="lg" striped highlightOnHover fontSize="md">
+          <Table.Thead style={{ background: "rgba(0, 113, 219, 0.12)" }}>
             <Table.Tr>
-              <Table.Th>ID</Table.Th>
-              <Table.Th>Name</Table.Th>
+              <Table.Th ta="center" fw={700}>City ID</Table.Th>
+              <Table.Th ta="center" fw={700}>English Name</Table.Th>
+              <Table.Th ta="center" fw={700}>Arabic Name (Original)</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
             {cities.map((c, idx) => (
               <Table.Tr key={c.id || idx}>
-                <Table.Td>{c.id}</Table.Td>
-                <Table.Td>{c.nameEn || c.name}</Table.Td>
+                <Table.Td ta="center" fw={600} c="dimmed">{c.id}</Table.Td>
+                <Table.Td ta="center" fw={600}>{c.nameEn || c.name || "-"}</Table.Td>
+                <Table.Td ta="center">{c.nameAr || c.name || "-"}</Table.Td>
               </Table.Tr>
             ))}
           </Table.Tbody>

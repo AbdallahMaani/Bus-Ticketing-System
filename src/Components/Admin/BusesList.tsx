@@ -38,7 +38,7 @@ export default function BusesTable() {
   const [editValues, setEditValues] = useState<Partial<BusDto>>({});
   const [confirmDelete, setConfirmDelete] = useState<{ open: boolean; id?: string }>({ open: false });
   const [createModal, setCreateModal] = useState(false);
-  const [newBus, setNewBus] = useState({ licensePlate: "", model: "", capacity: 0, totalSeats: 0, operator: "", type: "", modelYear: 0, driverName: "", features: "" });
+  const [newBus, setNewBus] = useState({ operator: "", type: "", capacity: 0, model: "", modelYear: 0, driverName: "", features: "" });
 
   const fetchBuses = async () => {
     setLoading(true);
@@ -89,15 +89,34 @@ export default function BusesTable() {
   };
 
   const createBus = async () => {
+    // Validate required fields
+    if (!newBus.operator?.trim() || !newBus.type?.trim() || !newBus.model?.trim() || newBus.capacity <= 0 || newBus.modelYear <= 0) {
+      notifications.show({ title: "Bus", message: "Please fill in all required fields (Operator, Type, Model, Capacity, Model Year)", color: "orange" });
+      return;
+    }
+
     try {
+      const busPayload = {
+        operator: newBus.operator,
+        type: newBus.type,
+        capacity: newBus.capacity,
+        model: newBus.model,
+        modelYear: newBus.modelYear,
+        driverName: newBus.driverName || "",
+        features: newBus.features || "",
+      };
+
       const res = await apiClientFetch("/api/Bus", {
         method: "POST",
-        body: JSON.stringify(newBus),
+        body: JSON.stringify(busPayload),
       });
-      if (!res.ok) throw new Error("Create failed");
-      notifications.show({ title: "Bus", message: "Created", color: "green" });
+      if (!res.ok) {
+        const error = await res.text();
+        throw new Error(error || "Create failed");
+      }
+      notifications.show({ title: "Bus", message: "Created successfully", color: "green" });
       setCreateModal(false);
-      setNewBus({ licensePlate: "", model: "", capacity: 0, totalSeats: 0 });
+      setNewBus({ operator: "", type: "", capacity: 0, model: "", modelYear: 0, driverName: "", features: "" });
       await fetchBuses();
     } catch (err: any) {
       notifications.show({ title: "Bus", message: err.message || "Create failed", color: "red" });
@@ -119,40 +138,40 @@ export default function BusesTable() {
 
   if (loading) {
     return (
-      <Paper withBorder p="md">
+      <Paper withBorder p="lg" radius="lg">
         <Center><Loader /></Center>
       </Paper>
     );
   }
 
   return (
-    <Paper withBorder p="md" radius="md">
-      <Group justify="space-between" mb="sm">
-        <Text fw={700}>Buses ({buses.length})</Text>
+    <Paper withBorder p="lg" radius="lg">
+      <Group justify="space-between" mb="lg">
+        <Text fw={800} size="xl">Buses ({buses.length})</Text>
         <Group>
-          <Button size="xs" onClick={() => setCreateModal(true)} leftSection={<IconPlus size={16} />}>Add Bus</Button>
-          <Button size="xs" variant="outline" onClick={fetchBuses} leftSection={<IconRefresh size={16} />}>Refresh</Button>
+          <Button size="md" variant="gradient" gradient={{ from: "#0685d9ff", to: "#0b8cf5ff", deg: 90 }} onClick={() => setCreateModal(true)} leftSection={<IconPlus size={16} />} fw={600}>Add Bus</Button>
+          <Button size="md" variant="gradient" gradient={{ from: "#0685d9ff", to: "#0b8cf5ff", deg: 90 }} onClick={fetchBuses} leftSection={<IconRefresh size={16} />} fw={600}>Refresh</Button>
         </Group>
       </Group>
 
-      <div style={{ overflowX: "auto" }}>
-        <Table verticalSpacing="sm" striped highlightOnHover>
-          <Table.Thead>
+      <div style={{ overflowX: "auto", borderRadius: "12px", border: "1px solid rgba(217, 119, 6, 0.1)" }}>
+        <Table verticalSpacing="lg" striped highlightOnHover fontSize="md">
+          <Table.Thead style={{ background: "rgba(0, 113, 219, 0.12)" }}>
             <Table.Tr>
-              <Table.Th>Operator</Table.Th>
-              <Table.Th>Type</Table.Th>
-              <Table.Th>Model</Table.Th>
-              <Table.Th>Year</Table.Th>
-              <Table.Th>Capacity</Table.Th>
-              <Table.Th>Driver</Table.Th>
-              <Table.Th>Features</Table.Th>
-              <Table.Th style={{ width: 100 }}>Actions</Table.Th>
+              <Table.Th ta="center" fw={700}>Operator</Table.Th>
+              <Table.Th ta="center" fw={700}>Type</Table.Th>
+              <Table.Th ta="center" fw={700}>Model</Table.Th>
+              <Table.Th ta="center" fw={700}>Year</Table.Th>
+              <Table.Th ta="center" fw={700}>Capacity</Table.Th>
+              <Table.Th ta="center" fw={700}>Driver</Table.Th>
+              <Table.Th ta="center" fw={700}>Features</Table.Th>
+              <Table.Th ta="center" fw={700} style={{ width: 120 }}>Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
             {buses.map((b, idx) => (
               <Table.Tr key={b.busId || idx}>
-                <Table.Td>
+                <Table.Td ta="center">
                   {editingId === b.busId ? (
                     <TextInput value={String(editValues.operator ?? "")} onChange={(e) => {
                       const value = e.currentTarget.value;
@@ -162,7 +181,7 @@ export default function BusesTable() {
                     b.operator
                   )}
                 </Table.Td>
-                <Table.Td>
+                <Table.Td ta="center">
                   {editingId === b.busId ? (
                     <TextInput value={String(editValues.type ?? "")} onChange={(e) => {
                       const value = e.currentTarget.value;
@@ -172,7 +191,7 @@ export default function BusesTable() {
                     b.type
                   )}
                 </Table.Td>
-                <Table.Td>
+                <Table.Td ta="center">
                   {editingId === b.busId ? (
                     <TextInput value={String(editValues.model ?? "")} onChange={(e) => {
                       const value = e.currentTarget.value;
@@ -182,7 +201,7 @@ export default function BusesTable() {
                     b.model
                   )}
                 </Table.Td>
-                <Table.Td>
+                <Table.Td ta="center">
                   {editingId === b.busId ? (
                     <TextInput type="number" value={editValues.modelYear} onChange={(e) => {
                       const value = parseInt(e.currentTarget.value);
@@ -192,8 +211,8 @@ export default function BusesTable() {
                     b.modelYear
                   )}
                 </Table.Td>
-                <Table.Td>{b.capacity || 0}</Table.Td>
-                <Table.Td>
+                <Table.Td ta="center">{b.capacity || 0}</Table.Td>
+                <Table.Td ta="center">
                   {editingId === b.busId ? (
                     <TextInput value={String(editValues.driverName ?? "")} onChange={(e) => {
                       const value = e.currentTarget.value;
@@ -203,7 +222,7 @@ export default function BusesTable() {
                     b.driverName
                   )}
                 </Table.Td>
-                <Table.Td>
+                <Table.Td ta="center">
                   {editingId === b.busId ? (
                     <TextInput value={String(editValues.features ?? "")} onChange={(e) => {
                       const value = e.currentTarget.value;
@@ -213,7 +232,7 @@ export default function BusesTable() {
                     <Text size="xs">{b.features}</Text>
                   )}
                 </Table.Td>
-                <Table.Td>
+                <Table.Td ta="center">
                   {editingId === b.busId ? (
                     <Group gap="xs">
                       <Button size="xs" onClick={() => saveEdit(b.busId)}>Save</Button>
@@ -221,8 +240,8 @@ export default function BusesTable() {
                     </Group>
                   ) : (
                     <Group gap="xs">
-                      <ActionIcon color="blue" onClick={() => startEdit(b)} title="Edit"><IconPencil size={16} /></ActionIcon>
-                      <ActionIcon color="red" onClick={() => setConfirmDelete({ open: true, id: b.busId })} title="Delete"><IconTrash size={16} /></ActionIcon>
+                      <ActionIcon color="blue" variant="light" size="lg" onClick={() => startEdit(b)} title="Edit"><IconPencil size={16} /></ActionIcon>
+                      <ActionIcon color="red" variant="light" size="lg" onClick={() => setConfirmDelete({ open: true, id: b.busId })} title="Delete"><IconTrash size={16} /></ActionIcon>
                     </Group>
                   )}
                 </Table.Td>
@@ -234,10 +253,34 @@ export default function BusesTable() {
 
       <Modal opened={createModal} onClose={() => setCreateModal(false)} title="Add New Bus">
         <Stack gap="sm">
-          <TextInput label="License Plate" value={newBus.licensePlate} onChange={(e) => setNewBus({ ...newBus, licensePlate: e.currentTarget.value })} />
-          <TextInput label="Model" value={newBus.model} onChange={(e) => setNewBus({ ...newBus, model: e.currentTarget.value })} />
-          <TextInput label="Capacity" type="number" value={newBus.capacity} onChange={(e) => setNewBus({ ...newBus, capacity: parseInt(e.currentTarget.value) })} />
-          <TextInput label="Total Seats" type="number" value={newBus.totalSeats} onChange={(e) => setNewBus({ ...newBus, totalSeats: parseInt(e.currentTarget.value) })} />
+          <TextInput label="Operator" value={newBus.operator} onChange={(e) => {
+            const value = e.currentTarget.value;
+            setNewBus({ ...newBus, operator: value });
+          }} />
+          <TextInput label="Type" value={newBus.type} onChange={(e) => {
+            const value = e.currentTarget.value;
+            setNewBus({ ...newBus, type: value });
+          }} />
+          <TextInput label="Model" value={newBus.model} onChange={(e) => {
+            const value = e.currentTarget.value;
+            setNewBus({ ...newBus, model: value });
+          }} />
+          <TextInput label="Model Year" type="number" value={newBus.modelYear} onChange={(e) => {
+            const value = parseInt(e.currentTarget.value);
+            setNewBus({ ...newBus, modelYear: value });
+          }} />
+          <TextInput label="Capacity" type="number" value={newBus.capacity} onChange={(e) => {
+            const value = parseInt(e.currentTarget.value);
+            setNewBus({ ...newBus, capacity: value });
+          }} />
+          <TextInput label="Driver Name" value={newBus.driverName} onChange={(e) => {
+            const value = e.currentTarget.value;
+            setNewBus({ ...newBus, driverName: value });
+          }} />
+          <TextInput label="Features" value={newBus.features} onChange={(e) => {
+            const value = e.currentTarget.value;
+            setNewBus({ ...newBus, features: value });
+          }} placeholder="e.g., WiFi,AC,USB Charger" />
           <Group justify="flex-end">
             <Button variant="outline" onClick={() => setCreateModal(false)}>Cancel</Button>
             <Button onClick={createBus}>Create</Button>

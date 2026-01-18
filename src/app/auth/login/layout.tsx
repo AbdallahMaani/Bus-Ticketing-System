@@ -11,12 +11,7 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AppShell header={{ height: 60 }} padding="md">
-      <AppShell.Header>
-        {/* <Header /> */}
-        <div style={{ padding: 15 }}></div>
-      </AppShell.Header>
-
+    <AppShell >
       <AppShell.Main>{children}</AppShell.Main>
 
        <Footer /> 

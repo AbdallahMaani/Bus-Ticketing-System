@@ -168,7 +168,7 @@ export default function Home() {
                 to={toCity} 
                 setTo={setToCity} 
               />
-              <div style={{ marginTop: "3rem" }}>
+              <div style={{ marginTop: "2rem" }}>
                 {trips.length > 0 && (
                   <Group justify="center" mb="lg">
                     <Paper withBorder radius="xl" px="xl" py="sm" shadow="md">
@@ -181,14 +181,12 @@ export default function Home() {
                     </Paper>
                   </Group>
                 )}
-                <Paper p="xs" style={{ maxHeight: "calc(100vh - 400px)", overflowY: "auto" }}>
                   <TicketsResults 
                     trips={trips} 
                     onShowOnMap={handleShowOnMap} 
                     balance={balance} 
                     onBook={handleBook} 
                   />
-                </Paper>
               </div>
             </Box>
 

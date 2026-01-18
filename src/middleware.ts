@@ -5,18 +5,22 @@ export default auth((req) => {
   const isLoggedIn = !!req.auth;
   const { pathname } = req.nextUrl;
 
-  // Public routes that don't require authentication
-  const publicRoutes = ['/auth/login', '/auth/register'];
-  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
+  // Protected routes that require authentication
+  const protectedRoutes = ['/admin', '/history', '/myprofile', '/TopUp'];
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
 
-  // If user is logged in and tries to access login page, redirect to home
-  if (isLoggedIn && isPublicRoute) {
-    return NextResponse.redirect(new URL('/', req.url));
+  // Auth routes
+  const authRoutes = ['/auth/login', '/auth/register'];
+  const isAuthRoute = authRoutes.some(route => pathname.startsWith(route));
+
+  // If not logged in and trying to access protected route, redirect to login
+  if (!isLoggedIn && isProtectedRoute) {
+    return NextResponse.redirect(new URL('/auth/login', req.url));
   }
 
-  // If user is not logged in and tries to access protected route, redirect to login
-  if (!isLoggedIn && !isPublicRoute) {
-    return NextResponse.redirect(new URL('/auth/login', req.url));
+  // If logged in and trying to access auth routes, redirect to home
+  if (isLoggedIn && isAuthRoute) {
+    return NextResponse.redirect(new URL('/', req.url));
   }
 
   return NextResponse.next();

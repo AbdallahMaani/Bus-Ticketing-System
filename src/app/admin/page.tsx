@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Container, Title, Paper, Stack, Text, Loader, Center, Tabs } from "@mantine/core";
 import { IconUsers, IconBus, IconMapPin, IconRoute, IconTicket, IconTrain } from "@tabler/icons-react";
-import AdminLayout from "./AdminLayout";
+import Header from "@/Components/Header";
 import UserList from "@/Components/Admin/UserList";
 import BookingsList from "@/Components/Admin/BookingsList";
 import BusesList from "@/Components/Admin/BusesList";
@@ -47,37 +47,58 @@ export default function AdminPage() {
   }
 
   return (
-    <AdminLayout>
+    <>
+      <Header />
       <Container size="xl" py="xl">
-        <Stack spacing="lg">
-          <Paper withBorder p="md" radius="md">
-            <Title order={2}>Admin Dashboard</Title>
-            <Text c="dimmed" mt="xs">
+        <Stack gap="xl">
+          <Paper 
+            withBorder 
+            p="xl" 
+            radius="lg" 
+            ta="center"
+            style={{
+              background: "linear-gradient(135deg, rgba(6, 140, 217, 0.04) 0%, rgba(11, 140, 245, 0.04) 100%)",
+              border: "2px solid rgba(6, 133, 217, 0.2)",
+              boxShadow: "0 4px 12px rgba(6, 150, 217, 0.08)",
+            }}
+          >
+            <Title order={2} size="2.5rem" fw={800} c="#5595d1ff" mb="md">Admin Dashboard</Title>
+            <Text c="dimmed" mt="xs" size="lg" fw={500}>
               Manage all system resources: users, bookings, buses, stations, trips, routes, and cities.
             </Text>
           </Paper>
 
-          <Tabs defaultValue="users" color="orange">
-            <Tabs.List grow>
-              <Tabs.Tab value="users" leftSection={<IconUsers size={16} />}>Users</Tabs.Tab>
-              <Tabs.Tab value="bookings" leftSection={<IconTicket size={16} />}>Bookings</Tabs.Tab>
-              <Tabs.Tab value="buses" leftSection={<IconBus size={16} />}>Buses</Tabs.Tab>
-              <Tabs.Tab value="stations" leftSection={<IconMapPin size={16} />}>Stations</Tabs.Tab>
-              <Tabs.Tab value="trips" leftSection={<IconTrain size={16} />}>Trips</Tabs.Tab>
-              <Tabs.Tab value="cities" leftSection={<IconMapPin size={16} />}>Cities</Tabs.Tab>
-              <Tabs.Tab value="routes" leftSection={<IconRoute size={16} />}>Routes</Tabs.Tab>
-            </Tabs.List>
+          <Paper 
+            withBorder 
+            p="lg"
+            radius="lg"
+            style={{
+              border: "1px solid rgba(6, 150, 217, 0.15)",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+            }}
+          >
+            <Tabs defaultValue="users" color="orange">
+              <Tabs.List grow>
+                <Tabs.Tab value="users" leftSection={<IconUsers size={20} />} fw={600} size="lg">Users</Tabs.Tab>
+                <Tabs.Tab value="bookings" leftSection={<IconTicket size={20} />} fw={600} size="lg">Bookings</Tabs.Tab>
+                <Tabs.Tab value="buses" leftSection={<IconBus size={20} />} fw={600} size="lg">Buses</Tabs.Tab>
+                <Tabs.Tab value="stations" leftSection={<IconMapPin size={20} />} fw={600} size="lg">Stations</Tabs.Tab>
+                <Tabs.Tab value="trips" leftSection={<IconTrain size={20} />} fw={600} size="lg">Trips</Tabs.Tab>
+                <Tabs.Tab value="cities" leftSection={<IconMapPin size={20} />} fw={600} size="lg">Cities</Tabs.Tab>
+                <Tabs.Tab value="routes" leftSection={<IconRoute size={20} />} fw={600} size="lg">Routes</Tabs.Tab>
+              </Tabs.List>
 
-            <Tabs.Panel value="users" pt="xl"><UserList /></Tabs.Panel>
-            <Tabs.Panel value="bookings" pt="xl"><BookingsList /></Tabs.Panel>
-            <Tabs.Panel value="buses" pt="xl"><BusesList /></Tabs.Panel>
-            <Tabs.Panel value="stations" pt="xl"><StationsList /></Tabs.Panel>
-            <Tabs.Panel value="trips" pt="xl"><TripsList /></Tabs.Panel>
-            <Tabs.Panel value="cities" pt="xl"><CitiesList /></Tabs.Panel>
-            <Tabs.Panel value="routes" pt="xl"><RoutesList /></Tabs.Panel>
-          </Tabs>
+              <Tabs.Panel value="users" pt="xl"><UserList /></Tabs.Panel>
+              <Tabs.Panel value="bookings" pt="xl"><BookingsList /></Tabs.Panel>
+              <Tabs.Panel value="buses" pt="xl"><BusesList /></Tabs.Panel>
+              <Tabs.Panel value="stations" pt="xl"><StationsList /></Tabs.Panel>
+              <Tabs.Panel value="trips" pt="xl"><TripsList /></Tabs.Panel>
+              <Tabs.Panel value="cities" pt="xl"><CitiesList /></Tabs.Panel>
+              <Tabs.Panel value="routes" pt="xl"><RoutesList /></Tabs.Panel>
+            </Tabs>
+          </Paper>
         </Stack>
       </Container>
-    </AdminLayout>
+    </>
   );
 }

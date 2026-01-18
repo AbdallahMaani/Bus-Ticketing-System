@@ -13,11 +13,12 @@ import {
   Modal,
   Button,
   Stack,
+  Badge,
 } from "@mantine/core";
-import { IconTrash, IconRefresh, IconEdit } from "@tabler/icons-react";
+import { IconTrash, IconRefresh, IconPencil } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { apiClientFetch } from "@/lib/apiClient";
-import { Select } from "@mantine/core";
+import { Select, TextInput } from "@mantine/core";
 
 type BookingDto = {
   bookingId: string;
@@ -35,8 +36,47 @@ type BookingDto = {
 export default function BookingsTable() {
   const [bookings, setBookings] = useState<BookingDto[]>([]);
   const [loading, setLoading] = useState(true);
-  const [confirmDelete, setConfirmDelete] = useState<{ open: boolean; id?: string }>({ open: false });
   const [statusChangeModal, setStatusChangeModal] = useState<{ open: boolean; id?: string; currentStatus?: string; newStatus?: string }>({ open: false });
+  const [userMap, setUserMap] = useState<Record<string, string>>({});
+  const [quantityModal, setQuantityModal] = useState<{ open: boolean; id?: string; quantity?: number; priceTotal?: number; tripPrice?: number }>({ open: false });
+  const [tripPriceMap, setTripPriceMap] = useState<Record<string, number>>({});
+  const [confirmDelete, setConfirmDelete] = useState<{ open: boolean; id?: string }>({ open: false });
+
+  const fetchUsers = async (userIds: string[]) => {
+    const uniqueIds = [...new Set(userIds)];
+    const newUserMap: Record<string, string> = {};
+
+    for (const id of uniqueIds) {
+      try {
+        const res = await apiClientFetch(`/api/User/${id}`);
+        if (res.ok) {
+          const user = await res.json();
+          newUserMap[id] = user.fullName || user.userName || "Unknown";
+        }
+      } catch (err: any) {
+        console.error(`Failed to fetch user ${id}:`, err);
+      }
+    }
+    setUserMap(newUserMap);
+  };
+
+  const fetchTripPrice = async (tripId: string) => {
+    if (tripPriceMap[tripId]) {
+      return tripPriceMap[tripId];
+    }
+    try {
+      const res = await apiClientFetch(`/api/Trip/${tripId}`);
+      if (res.ok) {
+        const trip = await res.json();
+        const price = trip.priceJod || 0;
+        setTripPriceMap((prev) => ({ ...prev, [tripId]: price }));
+        return price;
+      }
+    } catch (err: any) {
+      console.error(`Failed to fetch trip ${tripId}:`, err);
+    }
+    return 0;
+  };
 
   const fetchBookings = async () => {
     setLoading(true);
@@ -44,7 +84,13 @@ export default function BookingsTable() {
       const res = await apiClientFetch("/api/Booking");
       if (!res.ok) throw new Error(`Failed to load bookings (${res.status})`);
       const data = await res.json();
-      setBookings(Array.isArray(data) ? data : []);
+      const bookingsData = Array.isArray(data) ? data : [];
+      setBookings(bookingsData);
+      
+      const userIds = bookingsData.map((b: BookingDto) => b.userId).filter(Boolean);
+      if (userIds.length > 0) {
+        await fetchUsers(userIds);
+      }
     } catch (err: any) {
       notifications.show({ title: "Bookings", message: err.message || "Failed to load bookings", color: "red" });
     } finally {
@@ -56,37 +102,57 @@ export default function BookingsTable() {
     fetchBookings();
   }, []);
 
-  const confirmDeleteBooking = async (id?: string) => {
-    if (!id) return;
+  const updateBookingStatus = async (bookingId?: string, newStatus?: string) => {
+    if (!bookingId || !newStatus) return;
     try {
-      const res = await apiClientFetch(`/api/Booking/${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error("Delete failed");
-      notifications.show({ title: "Booking", message: "Deleted", color: "green" });
-      setConfirmDelete({ open: false });
+      if (newStatus === "Cancelled") {
+        const res = await apiClientFetch(`/api/Booking/${bookingId}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) {
+          const txt = await res.text();
+          throw new Error(txt || "Cancellation failed");
+        }
+        notifications.show({ title: "Booking", message: "Booking cancelled and refunded", color: "green" });
+        setConfirmDelete({ open: false });
+      } else {
+        const res = await apiClientFetch(`/api/Booking/${bookingId}`, {
+          method: "PUT",
+          body: JSON.stringify({
+            bookingId,
+            bookingStatus: newStatus,
+          }),
+        });
+        if (!res.ok) {
+          const txt = await res.text();
+          throw new Error(txt || "Update failed");
+        }
+        notifications.show({ title: "Booking", message: `Status changed to ${newStatus}`, color: "green" });
+        setStatusChangeModal({ open: false });
+      }
       await fetchBookings();
     } catch (err: any) {
-      notifications.show({ title: "Booking", message: err.message || "Delete failed", color: "red" });
+      notifications.show({ title: "Booking", message: err.message || "Update failed", color: "red" });
     }
   };
 
-  const updateBookingStatus = async (bookingId?: string, newStatus?: string) => {
-    if (!bookingId || !newStatus) return;
+  const updateBookingQuantity = async (bookingId?: string, newQuantity?: number, newPriceTotal?: number) => {
+    if (!bookingId || newQuantity === undefined || newPriceTotal === undefined) return;
     try {
       const res = await apiClientFetch(`/api/Booking/${bookingId}`, {
         method: "PUT",
         body: JSON.stringify({
           bookingId,
-          bookingStatus: newStatus,
+          quantity: newQuantity,
+          priceTotal: newPriceTotal,
         }),
       });
       if (!res.ok) {
         const txt = await res.text();
         throw new Error(txt || "Update failed");
       }
-      notifications.show({ title: "Booking", message: `Status changed to ${newStatus}`, color: "green" });
-      setStatusChangeModal({ open: false });
+      notifications.show({ title: "Booking", message: `Quantity and price updated`, color: "green" });
+      setQuantityModal({ open: false });
       await fetchBookings();
     } catch (err: any) {
       notifications.show({ title: "Booking", message: err.message || "Update failed", color: "red" });
@@ -95,58 +161,69 @@ export default function BookingsTable() {
 
   if (loading) {
     return (
-      <Paper withBorder p="md">
+      <Paper withBorder p="lg" radius="lg">
         <Center><Loader /></Center>
       </Paper>
     );
   }
 
   return (
-    <Paper withBorder p="md" radius="md">
-      <Group justify="space-between" mb="sm">
-        <Text fw={700}>Bookings ({bookings.length})</Text>
-        <Button size="xs" variant="outline" onClick={fetchBookings} leftSection={<IconRefresh size={16} />}>Refresh</Button>
+    <Paper withBorder p="lg" radius="lg">
+      <Group justify="space-between" mb="lg">
+        <Text fw={650} size="md">Bookings ({bookings.length})</Text>
+        <Button size="md" variant="gradient" gradient={{ from: "#0685d9ff", to: "#0b8cf5ff", deg: 90 }} onClick={fetchBookings} leftSection={<IconRefresh size={16} />} fw={600}>Refresh</Button>
       </Group>
 
-      <div style={{ overflowX: "auto" }}>
-        <Table verticalSpacing="sm" striped highlightOnHover>
-          <Table.Thead>
+      <div style={{ overflowX: "auto", borderRadius: "12px", border: "1px solid rgba(6, 150, 217, 0.1)" }}>
+        <Table verticalSpacing="lg" striped highlightOnHover fontSize="lg">
+          <Table.Thead style={{ background: "rgba(0, 113, 219, 0.12)" }}>
             <Table.Tr>
-              <Table.Th>Booking ID</Table.Th>
-              <Table.Th>Owner</Table.Th>
-              <Table.Th>Route</Table.Th>
-              <Table.Th>Date</Table.Th>
-              <Table.Th>Status</Table.Th>
-              <Table.Th>Qty</Table.Th>
-              <Table.Th>Price (JOD)</Table.Th>
-              <Table.Th style={{ width: 100 }}>Actions</Table.Th>
+              <Table.Th ta="center" fw={650} size="md">Booking ID</Table.Th>
+              <Table.Th ta="center" fw={650} size="md">Owner</Table.Th>
+              <Table.Th ta="center" fw={650} size="md">Route</Table.Th>
+              <Table.Th ta="center" fw={650} size="md">Date</Table.Th>
+              <Table.Th ta="center" fw={650} size="md">Status</Table.Th>
+              <Table.Th ta="center" fw={650} size="md">Qty</Table.Th>
+              <Table.Th ta="center" fw={650} size="md">Price (JOD)</Table.Th>
+              <Table.Th ta="center" fw={650} size="md" style={{ width: 180 }}>Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
             {bookings.map((b, idx) => (
               <Table.Tr key={b.bookingId || idx}>
-                <Table.Td>{b.bookingId?.substring(0, 8)}...</Table.Td>
-                <Table.Td>{b.userName || "Unknown"}</Table.Td>
-                <Table.Td>{b.originName} → {b.destinationName}</Table.Td>
-                <Table.Td>{new Date(b.bookingDate).toLocaleDateString()}</Table.Td>
-                <Table.Td>{b.bookingStatus}</Table.Td>
-                <Table.Td>{b.quantity}</Table.Td>
-                <Table.Td>{b.priceTotal.toFixed(2)}</Table.Td>
-                <Table.Td>
-                  <Group gap="xs">
+                <Table.Td ta="center">{b.bookingId?.substring(0, 8)}...</Table.Td>
+                <Table.Td ta="center">{userMap[b.userId] || b.userName || "Unknown"}</Table.Td>
+                <Table.Td ta="center">{b.originName} → {b.destinationName}</Table.Td>
+                <Table.Td ta="center">{new Date(b.bookingDate).toLocaleDateString()}</Table.Td>
+                <Table.Td ta="center">
+                    <Badge variant="light" color={b.bookingStatus === 'Confirmed' ? 'green' : b.bookingStatus === 'Cancelled' ? 'red' : 'gray'}>
+                        {b.bookingStatus}
+                    </Badge>
+                </Table.Td>
+                <Table.Td ta="center">{b.quantity}</Table.Td>
+                <Table.Td ta="center">{b.priceTotal.toFixed(2)}</Table.Td>
+                <Table.Td ta="center">
+                  <Group gap="xs" justify="center">
+                    <ActionIcon
+                      color="orange"
+                      variant="light"
+                      size="lg"
+                      onClick={async () => {
+                        const tripPrice = await fetchTripPrice(b.tripId);
+                        setQuantityModal({ open: true, id: b.bookingId, quantity: b.quantity, priceTotal: b.priceTotal, tripPrice });
+                      }}
+                      title="Edit Quantity"
+                    >
+                      <IconPencil size={18} />
+                    </ActionIcon>
                     <ActionIcon
                       color="blue"
+                      variant="light"
+                      size="lg"
                       onClick={() => setStatusChangeModal({ open: true, id: b.bookingId, currentStatus: b.bookingStatus })}
                       title="Change Status"
                     >
-                      <IconEdit size={16} />
-                    </ActionIcon>
-                    <ActionIcon
-                      color="red"
-                      onClick={() => setConfirmDelete({ open: true, id: b.bookingId })}
-                      title="Delete"
-                    >
-                      <IconTrash size={16} />
+                      <IconRefresh size={18} />
                     </ActionIcon>
                   </Group>
                 </Table.Td>
@@ -156,19 +233,19 @@ export default function BookingsTable() {
         </Table>
       </div>
 
-      <Modal opened={confirmDelete.open} onClose={() => setConfirmDelete({ open: false })} title="Confirm delete">
-        <Stack gap="sm">
-          <Text>Are you sure you want to delete this booking?</Text>
-          <Group justify="flex-end">
-            <Button variant="outline" onClick={() => setConfirmDelete({ open: false })}>Cancel</Button>
-            <Button color="red" onClick={() => confirmDeleteBooking(confirmDelete.id)}>Delete</Button>
-          </Group>
+      <Modal opened={confirmDelete.open} onClose={() => setConfirmDelete({ open: false })} title="Confirm Cancellation" radius="lg" centered>
+        <Stack>
+            <Text>Are you sure you want to cancel this booking? This will refund the user and cannot be undone.</Text>
+            <Group justify="flex-end" mt="md">
+                <Button variant="default" onClick={() => setConfirmDelete({ open: false })}>No, go back</Button>
+                <Button color="red" onClick={() => updateBookingStatus(confirmDelete.id, "Cancelled")}>Yes, cancel booking</Button>
+            </Group>
         </Stack>
       </Modal>
 
-      <Modal opened={statusChangeModal.open} onClose={() => setStatusChangeModal({ open: false })} title="Change Booking Status">
-        <Stack gap="sm">
-          <Text>Current Status: <strong>{statusChangeModal.currentStatus}</strong></Text>
+      <Modal opened={statusChangeModal.open} onClose={() => setStatusChangeModal({ open: false })} title="Change Booking Status" radius="lg" centered>
+        <Stack gap="md">
+          <Text size="lg" fw={600}>Current Status: <Text span fw={700} c="#0685d9ff">{statusChangeModal.currentStatus}</Text></Text>
           <Select
             label="New Status"
             placeholder="Select new status"
@@ -179,15 +256,59 @@ export default function BookingsTable() {
             value={statusChangeModal.newStatus}
             onChange={(val) => setStatusChangeModal((prev) => ({ ...prev, newStatus: val || "" }))}
             searchable
+            size="md"
           />
-          <Group justify="flex-end">
-            <Button variant="outline" onClick={() => setStatusChangeModal({ open: false })}>Cancel</Button>
+          <Group justify="flex-end" gap="md">
+            <Button variant="light" onClick={() => setStatusChangeModal({ open: false })} fw={600} size="md">Cancel</Button>
             <Button 
-              color="blue" 
+              variant="gradient"
+              gradient={{ from: "#0685d9ff", to: "#0b8cf5ff", deg: 90 }}
               onClick={() => updateBookingStatus(statusChangeModal.id, statusChangeModal.newStatus)}
               disabled={!statusChangeModal.newStatus || statusChangeModal.newStatus === statusChangeModal.currentStatus}
+              fw={700}
+              size="md"
             >
               Change Status
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      <Modal opened={quantityModal.open} onClose={() => setQuantityModal({ open: false })} title="Edit Quantity and Price" radius="lg" centered>
+        <Stack gap="md">
+          <Text size="lg" fw={600}>Trip Price (per seat): <Text span fw={700} c="#0685d9ff">{quantityModal.tripPrice?.toFixed(2)} JOD</Text></Text>
+          <TextInput
+            label="Quantity"
+            type="number"
+            min="1"
+            value={quantityModal.quantity || ""}
+            onChange={(e) => {
+              const qty = parseInt(e.currentTarget.value) || 0;
+              const newPrice = qty * (quantityModal.tripPrice || 0);
+              setQuantityModal((prev) => ({ ...prev, quantity: qty, priceTotal: newPrice }));
+            }}
+            size="md"
+            fw={600}
+          />
+          <TextInput
+            label="Total Price (JOD)"
+            type="number"
+            value={quantityModal.priceTotal?.toFixed(2) || ""}
+            disabled
+            readOnly
+            size="md"
+          />
+          <Group justify="flex-end" gap="md">
+            <Button variant="light" onClick={() => setQuantityModal({ open: false })} fw={600} size="md">Cancel</Button>
+            <Button 
+              variant="gradient"
+              gradient={{ from: "#22c55e", to: "#16a34a", deg: 90 }}
+              onClick={() => updateBookingQuantity(quantityModal.id, quantityModal.quantity, quantityModal.priceTotal)}
+              disabled={!quantityModal.quantity || quantityModal.quantity <= 0}
+              fw={700}
+              size="md"
+            >
+              Update
             </Button>
           </Group>
         </Stack>

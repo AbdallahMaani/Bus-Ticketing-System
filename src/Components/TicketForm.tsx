@@ -6,7 +6,11 @@ import {
   Paper,
   Stack,
   Text,
+  Button,
+  Group,
+  Box,
 } from "@mantine/core";
+import { IconSearch } from "@tabler/icons-react";
 import type { Trip } from "./types";
 type CityOption = { value: string; label: string; };
 
@@ -125,59 +129,131 @@ export default function TicketForm({
   return (
     <Paper 
       component="form" 
-      p="1.5rem" 
+      p="2rem" 
       radius={20} 
       bg="white" 
       style={{ 
         position: "sticky", 
         top: "1rem", 
         height: "fit-content", 
-        zIndex: 10 
+        zIndex: 10,
+        boxShadow: "0 8px 32px rgba(59, 130, 246, 0.15)",
+        border: "1px solid rgba(59, 130, 246, 0.1)",
+        background: "linear-gradient(135deg, #ffffff 0%, rgba(59, 130, 246, 0.02) 100%)",
       }}
     >
-      <Stack gap="md">
-        <Title order={3} style={{ color: "#222" }} ta="center">
-          Find your trip
-        </Title>
+      <Stack gap="lg">
+        <Box>
+          <Title order={2} style={{ color: "#1e40af" }} ta="center" fw={800}>
+            Find Your Trip
+          </Title>
+          <Text size="sm" c="dimmed" ta="center" mt="xs">
+            Search and book your journey easily
+          </Text>
+        </Box>
         
         <Select 
           label="From" 
-          placeholder="Pick origin" 
+          placeholder="Pick origin city" 
           data={cityOptions} 
           value={from} 
           onChange={setFrom} 
           searchable 
           nothingFoundMessage="No city found" 
-          radius="md" 
+          radius="lg"
+          size="md"
+          styles={{
+            label: {
+              fontWeight: 600,
+              fontSize: "14px",
+              marginBottom: "8px",
+              color: "#1e40af",
+            },
+            input: {
+              borderColor: "rgba(59, 130, 246, 0.3)",
+              transition: "all 0.3s ease",
+              "&:focus": {
+                borderColor: "#3b82f6",
+                boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
+              },
+            },
+          }}
         />
         
         <Select 
           label="To" 
-          placeholder="Pick destination" 
+          placeholder="Pick destination city" 
           data={cityOptions} 
           value={to} 
           onChange={setTo} 
           searchable 
           nothingFoundMessage="No city found" 
-          radius="md" 
+          radius="lg"
+          size="md"
+          styles={{
+            label: {
+              fontWeight: 600,
+              fontSize: "14px",
+              marginBottom: "8px",
+              color: "#1e40af",
+            },
+            input: {
+              borderColor: "rgba(59, 130, 246, 0.3)",
+              transition: "all 0.3s ease",
+              "&:focus": {
+                borderColor: "#3b82f6",
+                boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
+              },
+            },
+          }}
         />
         
-        <input 
-          type="date" 
-          value={date} 
-          onChange={(e) => setDate(e.target.value)} 
-          style={{ 
-            padding: '10px', 
-            borderRadius: 8, 
-            border: '1px solid #ced4da',
-            fontSize: '14px'
-          }} 
-        />
-        
-        {noResults && (
-          <Text size="sm" c="red" ta="center" fw={500}>
-            Sorry, no trips found matching your criteria.
+        <Box>
+          <Text size="sm" fw={600} mb="8px" c="#1e40af">
+            Travel Date
           </Text>
+          <input 
+            type="date" 
+            value={date} 
+            onChange={(e) => setDate(e.target.value)} 
+            style={{ 
+              padding: '12px 14px', 
+              borderRadius: 12, 
+              border: '1.5px solid rgba(59, 130, 246, 0.3)',
+              fontSize: '14px',
+              width: '100%',
+              fontWeight: 500,
+              boxSizing: 'border-box',
+              transition: 'all 0.3s ease',
+              background: 'white',
+            }} 
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = '#3b82f6';
+              e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          />
+        </Box>
+      
+        {noResults && (
+          <Box
+            p="md"
+            style={{
+              borderRadius: "12px",
+              background: "linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(234, 179, 8, 0.05) 100%)",
+              border: "1px solid rgba(239, 68, 68, 0.2)",
+            }}
+          >
+            <Text size="sm" c="red" ta="center" fw={600}>
+              Sorry, no trips found matching your criteria.
+            </Text>
+            <Text size="xs" c="dimmed" ta="center" mt="4px">
+              Try different dates or cities
+            </Text>
+          </Box>
         )}
       </Stack>
     </Paper>

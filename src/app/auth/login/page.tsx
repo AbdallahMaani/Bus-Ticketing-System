@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from "next-auth/react";
 import { signIn } from "next-auth/react";
-import { Container, Paper, Title, TextInput, PasswordInput, Button, Stack, Alert, Text, Divider, Anchor, ThemeIcon } from '@mantine/core';
+import { Container, Paper, Title, TextInput, PasswordInput, Button, Stack, Alert, Text, Divider, Anchor, ThemeIcon, Group, Box } from '@mantine/core';
+import { IconBus, IconLock, IconUser, IconUserPlus, IconLogout } from '@tabler/icons-react';
 import SignUp from './SignUp';
 
 export default function LoginPage() {
@@ -47,14 +48,9 @@ export default function LoginPage() {
         const userRole = (updatedSession?.user as any)?.role;
         console.log("User role:", userRole);
         
-        // Redirect based on role
-        if (userRole === "Admin") {
-          console.log("Admin user, redirecting to admin dashboard");
-          router.push('/admin');
-        } else {
-          console.log("Regular user, redirecting to home");
-          router.push('/');
-        }
+        // Redirect all users to home page (Header will handle admin link visibility)
+        console.log("Login successful, redirecting to home");
+        router.push('/');
       } else {
         setError("An unexpected error occurred");
       }
@@ -66,71 +62,172 @@ export default function LoginPage() {
     }
   };
 
+  const handleGuestLogin = async () => {
+    setLoading(true);
+    setError('');
+    
+    try {
+      console.log("Guest user attempting to access home page");
+      console.log("Redirecting guest user to home page");
+      
+      // Redirect guest to home page without authentication
+      router.push('/');
+    } catch (err: any) {
+      console.error("Guest login exception:", err);
+      setError("An error occurred while accessing as guest");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (showSignUp) {
     return (
-      <Container size={420} my={40}>
-        <SignUp onToggle={() => setShowSignUp(false)} onSignUpSuccess={() => {
-          setShowSignUp(false);
-          setError('');
-        }} />
-      </Container>
+      <Box
+        style={{
+          minHeight: "100vh",
+          background: "linear-gradient(135deg, rgba(6, 133, 217, 0.05) 0%, rgba(11, 140, 245, 0.08) 100%)",
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <Container size={420}>
+          <SignUp onToggle={() => setShowSignUp(false)} onSignUpSuccess={() => {
+            setShowSignUp(false);
+            setError('');
+          }} />
+        </Container>
+      </Box>
     );
   }
 
   return (
-    <Container size={420} my={40}>
-      <Stack align="center" mb={20}>
-        <ThemeIcon size={60} radius="md" variant="light">🚌</ThemeIcon>
-        <Title order={2}>Jordan Bus System</Title>
-        <Text c="dimmed">Sign in to your account</Text>
-      </Stack>
+    <Box
+      style={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, rgba(6, 133, 217, 0.05) 0%, rgba(11, 140, 245, 0.08) 100%)",
+        display: "flex",
+        alignItems: "center",
+      }}
+    >
+      <Container size={420}>
+        <Stack gap={0} align="center" mb={40}>
+          <ThemeIcon 
+            size={80} 
+            radius="lg" 
+            variant="gradient" 
+            gradient={{ from: "#0685d9ff", to: "#0b8cf5ff", deg: 90 }}
+            mb="md"
+          >
+            <IconBus size={44} stroke={2} />
+          </ThemeIcon>
+          <Title order={1} size="2.5rem" fw={800} c="#0685d9ff" ta="center">Jordan Bus</Title>
+          <Text c="dimmed" ta="center" size="md" fw={500} mt="xs">Book your journey with ease</Text>
+        </Stack>
 
-      <Paper withBorder shadow="md" p={30} radius="md">
-        <form onSubmit={handleSubmit}>
-          <Stack>
-            {error && (
-              <Alert color="red" title="Login Error">
-                {error}
-              </Alert>
-            )}
+        <Paper 
+          withBorder 
+          p={40} 
+          radius="lg"
+          shadow="lg"
+          style={{
+            background: "rgba(255, 255, 255, 0.95)",
+            border: "1px solid rgba(6, 133, 217, 0.2)",
+            backdropFilter: "blur(10px)",
+          }}
+        >
+          <form onSubmit={handleSubmit}>
+            <Stack gap="lg">
+              {error && (
+                <Alert color="red" title="Login Error" icon={<IconLock size={16} />} variant="light">
+                  {error}
+                </Alert>
+              )}
 
-            <TextInput 
-              label="Username" 
-              placeholder="Enter your username"
-              value={username} 
-              onChange={(e) => setUsername(e.target.value)} 
-              required 
+              <TextInput 
+                label="Username" 
+                placeholder="Enter your username"
+                value={username} 
+                onChange={(e) => setUsername(e.target.value)} 
+                required 
+                disabled={loading}
+                size="md"
+                leftSection={<IconUser size={18} color="#0685d9ff" />}
+                styles={{
+                  input: {
+                    borderColor: "rgba(6, 133, 217, 0.2)",
+                    "&:focus": {
+                      borderColor: "#0685d9ff",
+                    },
+                  },
+                }}
+              />
+              <PasswordInput 
+                label="Password" 
+                placeholder="Enter your password"
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+                required 
+                disabled={loading}
+                size="md"
+                leftSection={<IconLock size={18} color="#0685d9ff" />}
+                styles={{
+                  input: {
+                    borderColor: "rgba(6, 133, 217, 0.2)",
+                    "&:focus": {
+                      borderColor: "#0685d9ff",
+                    },
+                  },
+                }}
+              />
+
+              <Button 
+                type="submit" 
+                fullWidth 
+                loading={loading}
+                size="md"
+                fw={700}
+                variant="gradient"
+                gradient={{ from: "#0685d9ff", to: "#0b8cf5ff", deg: 90 }}
+              >
+                {loading ? "Signing in..." : "Sign In"}
+              </Button>
+            </Stack>
+          </form>
+
+          <Divider my="xl" label="Or continue with" labelPosition="center" />
+
+          <Stack gap="sm">
+            <Button 
+              fullWidth
+              variant="light"
+              onClick={() => setShowSignUp(true)}
+              size="md"
+              fw={600}
+              leftSection={<IconUserPlus size={18} />}
+              color="orange"
+            >
+              Create New Account
+            </Button>
+
+            <Button 
+              fullWidth
+              variant="subtle"
+              onClick={handleGuestLogin}
               disabled={loading}
-            />
-            <PasswordInput 
-              label="Password" 
-              placeholder="Enter your password"
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              required 
-              disabled={loading}
-            />
-
-            <Button type="submit" fullWidth loading={loading}>
-              {loading ? "Signing in..." : "Login"}
+              size="md"
+              fw={600}
+              leftSection={<IconLogout size={18} />}
+              color="gray"
+            >
+              Continue as Guest
             </Button>
           </Stack>
-        </form>
+        </Paper>
 
-        <Divider my="lg" label="or" />
-
-        <Text ta="center" size="sm">
-          Don&apos;t have an account?{' '}
-          <Anchor 
-            component="button" 
-            type="button"
-            onClick={() => setShowSignUp(true)} 
-            underline="hover"
-          >
-            Sign up
-          </Anchor>
+        <Text c="dimmed" ta="center" size="sm" mt="xl">
+          Protected by secure authentication. Your data is safe with us.
         </Text>
-      </Paper>
-    </Container>
+      </Container>
+    </Box>
   );
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -20,6 +21,25 @@ type RouteDto = {
 export default function RoutesTable() {
   const [routes, setRoutes] = useState<RouteDto[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cityMap, setCityMap] = useState<Record<string, string>>({});
+
+  const fetchCities = async () => {
+    try {
+      const res = await apiClientFetch("/api/City");
+      if (res.ok) {
+        const cities = await res.json();
+        const map: Record<string, string> = {};
+        if (Array.isArray(cities)) {
+          cities.forEach((city: any) => {
+            map[city.id] = city.nameEn || city.name || city.id;
+          });
+        }
+        setCityMap(map);
+      }
+    } catch (err: any) {
+      console.error("Failed to fetch cities:", err);
+    }
+  };
 
   const fetchRoutes = async () => {
     setLoading(true);
@@ -36,39 +56,40 @@ export default function RoutesTable() {
   };
 
   useEffect(() => {
+    fetchCities();
     fetchRoutes();
   }, []);
 
   if (loading) {
     return (
-      <Paper withBorder p="md">
+      <Paper withBorder p="lg" radius="lg">
         <Center><Loader /></Center>
       </Paper>
     );
   }
 
   return (
-    <Paper withBorder p="md" radius="md">
-      <Group justify="space-between" mb="sm">
-        <Text fw={700}>Routes ({routes.length})</Text>
-        <Button size="xs" variant="outline" onClick={fetchRoutes} leftSection={<IconRefresh size={16} />}>Refresh</Button>
+    <Paper withBorder p="lg" radius="lg">
+      <Group justify="space-between" mb="lg">
+        <Text fw={800} size="md">Routes ({routes.length})</Text>
+        <Button size="md" variant="gradient" gradient={{ from: "#0685d9ff", to: "#0b8cf5ff", deg: 90 }} onClick={fetchRoutes} leftSection={<IconRefresh size={16} />} fw={600}>Refresh</Button>
       </Group>
 
-      <div style={{ overflowX: "auto" }}>
-        <Table verticalSpacing="sm" striped highlightOnHover>
-          <Table.Thead>
+      <div style={{ overflowX: "auto", borderRadius: "12px", border: "1px solid rgba(6, 150, 217, 0.1)" }}>
+        <Table verticalSpacing="lg" striped highlightOnHover fontSize="md">
+          <Table.Thead style={{ background: "rgba(0, 113, 219, 0.12)" }}>
             <Table.Tr>
-              <Table.Th>From</Table.Th>
-              <Table.Th>To</Table.Th>
-              <Table.Th>Distance (km)</Table.Th>
+              <Table.Th ta="center" fw={700}>From (Origin)</Table.Th>
+              <Table.Th ta="center" fw={700}>To (Destination)</Table.Th>
+              <Table.Th ta="center" fw={700}>Distance (KM)</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
             {routes.map((r, idx) => (
               <Table.Tr key={r.routeId || idx}>
-                <Table.Td>{r.fromStation || r.originId}</Table.Td>
-                <Table.Td>{r.toStation || r.destinationId}</Table.Td>
-                <Table.Td>{r.distanceKm || r.distance || 0}</Table.Td>
+                <Table.Td ta="center" fw={600}>{cityMap[r.originId || ""] || r.fromStation || r.originId || "N/A"}</Table.Td>
+                <Table.Td ta="center" fw={600}>{cityMap[r.destinationId || ""] || r.toStation || r.destinationId || "N/A"}</Table.Td>
+                <Table.Td ta="center">{r.distanceKm || r.distance || 0}</Table.Td>
               </Table.Tr>
             ))}
           </Table.Tbody>

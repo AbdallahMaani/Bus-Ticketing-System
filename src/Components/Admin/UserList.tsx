@@ -112,52 +112,54 @@ export default function UserList() {
 
   if (loading) {
     return (
-      <Paper withBorder p="md">
+      <Paper withBorder p="lg" radius="lg">
         <Center><Loader /></Center>
       </Paper>
     );
   }
 
   return (
-    <Paper withBorder p="md" radius="md">
-      <Group justify="space-between" mb="sm">
-        <Text fw={700}>Users ({users.length})</Text>
+    <Paper withBorder p="lg" radius="lg">
+      <Group justify="space-between" mb="lg">
+        <Text fw={800} size="lg">Users ({users.length})</Text>
         <Group>
-          <Button size="xs" variant="outline" onClick={fetchUsers} leftSection={<IconRefresh size={16} />}>Refresh</Button>
+          <Button size="md" variant="gradient" gradient={{ from: "#0685d9ff", to: "#0b8cf5ff", deg: 90 }} onClick={fetchUsers} leftSection={<IconRefresh size={18} />} fw={600}>Refresh</Button>
         </Group>
       </Group>
 
-      <Table verticalSpacing="sm" striped highlightOnHover>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Username</Table.Th>
-            <Table.Th>Full name</Table.Th>
-            <Table.Th>Email</Table.Th>
-            <Table.Th>Phone</Table.Th>
-            <Table.Th>Role</Table.Th>
-            <Table.Th>Balance</Table.Th>
-            <Table.Th style={{ width: 180 }}>Actions</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {users.map((u, idx) => (
-            <Table.Tr key={u.userId || idx}>
-              <Table.Td>{u.username}</Table.Td>
-              <Table.Td>
-                {editingId === u.userId ? (
-                  <TextInput
-                    value={String(editValues.fullName ?? "")}
-                    onChange={(e) => {
+      <div style={{ overflowX: "auto", borderRadius: "12px", border: "1px solid rgba(6, 150, 217, 0.1)" }}>
+        <Table verticalSpacing="lg" striped highlightOnHover fontSize="md">
+          <Table.Thead style={{ background: "rgba(0, 113, 219, 0.12)" }}>
+            <Table.Tr>
+              <Table.Th ta="center" fw={700}>Username</Table.Th>
+              <Table.Th ta="center" fw={700}>Full name</Table.Th>
+              <Table.Th ta="center" fw={700}>Email</Table.Th>
+              <Table.Th ta="center" fw={700}>Phone</Table.Th>
+              <Table.Th ta="center" fw={700}>Role</Table.Th>
+              <Table.Th ta="center" fw={700}>Balance</Table.Th>
+              <Table.Th ta="center" fw={700} style={{ width: 180 }}>Actions</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {users.map((u, idx) => (
+              <Table.Tr key={u.userId || idx}>
+                <Table.Td ta="center" fw={500}>{u.username}</Table.Td>
+                <Table.Td ta="center" fw={500}>
+                  {editingId === u.userId ? (
+                    <TextInput
+                      value={String(editValues.fullName ?? "")}
+                      onChange={(e) => {
                       const value = e.currentTarget.value;
                       setEditValues((s) => ({ ...s, fullName: value }));
                     }}
-                    size="xs"
+                    size="sm"
+                    fw={600}
                   />
                 ) : (
                   u.fullName
                 )}
               </Table.Td>
-              <Table.Td>
+              <Table.Td ta="center" fw={500}>
                 {editingId === u.userId ? (
                   <TextInput
                     value={String(editValues.email ?? "")}
@@ -165,13 +167,14 @@ export default function UserList() {
                       const value = e.currentTarget.value;
                       setEditValues((s) => ({ ...s, email: value }));
                     }}
-                    size="xs"
+                    size="sm"
+                    fw={600}
                   />
                 ) : (
                   u.email
                 )}
               </Table.Td>
-              <Table.Td>
+              <Table.Td ta="center" fw={500}>
                 {editingId === u.userId ? (
                   <TextInput
                     value={String(editValues.phone ?? "")}
@@ -179,13 +182,14 @@ export default function UserList() {
                       const value = e.currentTarget.value;
                       setEditValues((s) => ({ ...s, phone: value }));
                     }}
-                    size="xs"
+                    size="sm"
+                    fw={600}
                   />
                 ) : (
                   u.phone
                 )}
               </Table.Td>
-              <Table.Td>
+              <Table.Td ta="center" fw={600}>
                 {editingId === u.userId ? (
                   <Select
                     value={editValues.role || u.role}
@@ -194,25 +198,25 @@ export default function UserList() {
                       { label: "Customer", value: "customer" },
                       { label: "Admin", value: "Admin" },
                     ]}
-                    size="xs"
+                    size="sm"
                     searchable
                   />
                 ) : (
                   u.role
                 )}
               </Table.Td>
-              <Table.Td>{u.balance.toFixed(2)} JOD</Table.Td>
-              <Table.Td>
+              <Table.Td ta="center" fw={700} c="#0685d9ff">{u.balance.toFixed(2)} JOD</Table.Td>
+              <Table.Td ta="center">
                 {editingId === u.userId ? (
-                  <Group gap="xs">
-                    <Button size="xs" onClick={() => saveEdit(u.userId)}>Save</Button>
-                    <Button size="xs" variant="outline" onClick={cancelEdit}>Cancel</Button>
+                  <Group gap="xs" justify="center">
+                    <Button size="sm" fw={600} onClick={() => saveEdit(u.userId)}>Save</Button>
+                    <Button size="sm" fw={600} variant="light" onClick={cancelEdit}>Cancel</Button>
                   </Group>
                 ) : (
-                  <Group gap="xs">
-                    <ActionIcon color="blue" onClick={() => startEdit(u)} title="Edit"><IconPencil size={16} /></ActionIcon>
-                    <ActionIcon color="orange" onClick={() => setResetModal({ open: true, id: u.userId })} title="Reset Password"><IconRefresh size={16} /></ActionIcon>
-                    <ActionIcon color="red" onClick={() => setConfirmDelete({ open: true, id: u.userId })} title="Delete"><IconTrash size={16} /></ActionIcon>
+                  <Group gap="xs" justify="center">
+                    <ActionIcon color="orange" variant="light" size="lg" onClick={() => startEdit(u)} title="Edit"><IconPencil size={18} /></ActionIcon>
+                    <ActionIcon color="blue" variant="light" size="lg" onClick={() => setResetModal({ open: true, id: u.userId })} title="Reset Password"><IconRefresh size={18} /></ActionIcon>
+                    <ActionIcon color="red" variant="light" size="lg" onClick={() => setConfirmDelete({ open: true, id: u.userId })} title="Delete"><IconTrash size={18} /></ActionIcon>
                   </Group>
                 )}
               </Table.Td>
@@ -220,13 +224,14 @@ export default function UserList() {
           ))}
         </Table.Tbody>
       </Table>
+      </div>
 
-      <Modal opened={confirmDelete.open} onClose={() => setConfirmDelete({ open: false })} title="Confirm delete">
-        <Stack gap="sm">
-          <Text>Are you sure you want to delete this user? This action cannot be undone.</Text>
-          <Group justify="flex-end">
-            <Button variant="outline" onClick={() => setConfirmDelete({ open: false })}>Cancel</Button>
-            <Button color="red" onClick={() => confirmDeleteUser(confirmDelete.id)}>Delete</Button>
+      <Modal opened={confirmDelete.open} onClose={() => setConfirmDelete({ open: false })} title="Confirm delete" radius="lg" centered>
+        <Stack gap="md">
+          <Text size="lg" fw={600}>Are you sure you want to delete this user? This action cannot be undone.</Text>
+          <Group justify="flex-end" gap="md">
+            <Button variant="light" fw={600} size="md" onClick={() => setConfirmDelete({ open: false })}>Cancel</Button>
+            <Button variant="gradient" gradient={{ from: "#dc2626", to: "#ef4444", deg: 90 }} fw={700} size="md" onClick={() => confirmDeleteUser(confirmDelete.id)}>Delete</Button>
           </Group>
         </Stack>
       </Modal>
@@ -241,12 +246,12 @@ export default function UserList() {
         }}
       />
 
-      <Modal opened={roleChangeConfirm.open} onClose={() => setRoleChangeConfirm({ open: false })} title="Confirm role change">
-        <Stack gap="sm">
-          <Text>Are you sure you want to change this user's role to <strong>{roleChangeConfirm.newRole}</strong>?</Text>
-          <Group justify="flex-end">
-            <Button variant="outline" onClick={() => setRoleChangeConfirm({ open: false })}>Cancel</Button>
-            <Button color="green" onClick={() => {
+      <Modal opened={roleChangeConfirm.open} onClose={() => setRoleChangeConfirm({ open: false })} title="Confirm role change" radius="lg" centered>
+        <Stack gap="md">
+          <Text size="lg" fw={600}>Are you sure you want to change this user&apos;s role to <Text span fw={700} c="#0685d9ff">{roleChangeConfirm.newRole}</Text>?</Text>
+          <Group justify="flex-end" gap="md">
+            <Button variant="light" fw={600} size="md" onClick={() => setRoleChangeConfirm({ open: false })}>Cancel</Button>
+            <Button variant="gradient" gradient={{ from: "#22c55e", to: "#16a34a", deg: 90 }} fw={700} size="md" onClick={() => {
               saveEdit(roleChangeConfirm.id || "");
               setRoleChangeConfirm({ open: false });
             }}>Confirm</Button>

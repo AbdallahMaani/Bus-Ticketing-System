@@ -80,49 +80,78 @@ function Header() {
         </Link>
 
         {/* Navigation Links */}
-        <Group gap="md">
+        <Group gap="lg" justify="center">
           <Button
             component={Link}
             href="/"
-            variant={pathname === "/" ? "filled" : "subtle"}
-            size="md"
-            radius="lg"
+            variant={pathname === "/" ? "gradient" : "subtle"}
+            gradient={pathname === "/" ? { from: "blue", to: "cyan", deg: 90 } : undefined}
+            size="lg"
+            radius="xl"
+            fw={500}
             leftSection={<IconHome size={18} />}
+            styles={{
+              root: {
+                transition: "all 0.3s ease",
+              },
+            }}
           >
             Home
           </Button>
-          <Button
-            component={Link}
-            href="/history"
-            variant={pathname === "/history" ? "filled" : "subtle"}
-            size="md"
-            radius="lg"
-          >
-            History
-          </Button>
-          <Button
-            component={Link}
-            href="/about"
-            variant={pathname === "/about" ? "filled" : "subtle"}
-            size="md"
-            radius="lg"
-          >
-            About
-          </Button>
-          {/* Admin Dashboard Button - Only show if user is Admin */}
-          {isLoggedIn && (session.user as any)?.role === "Admin" && (
+          {isLoggedIn && (
+            <Button
+              component={Link}
+              href="/history"
+              variant={pathname === "/history" ? "gradient" : "subtle"}
+              gradient={pathname === "/history" ? { from: "blue", to: "cyan", deg: 90 } : undefined}
+              size="lg"
+              radius="xl"
+              fw={500}
+              leftSection={<IconHistory size={18} />}
+              styles={{
+                root: {
+                  transition: "all 0.3s ease",
+                },
+              }}
+            >
+              History
+            </Button>
+          )}
+           {isLoggedIn && (session.user as any)?.role === "Admin" && (
             <Button
               component={Link}
               href="/admin"
-              variant={pathname === "/admin" ? "filled" : "subtle"}
-              size="md"
-              radius="lg"
-              color="orange"
+              variant={pathname === "/admin" ? "gradient" : "subtle"}
+              gradient={pathname === "/admin" ? { from: "orange", to: "red", deg: 90 } : undefined}
+              size="lg"
+              radius="xl"
+              fw={600}
               leftSection={<IconDashboard size={18} />}
+              styles={{
+                root: {
+                  transition: "all 0.3s ease",
+                },
+              }}
             >
-              Admin Dashboard
+              Admin
             </Button>
           )}
+          <Button
+            component={Link}
+            href="/about"
+            variant={pathname === "/about" ? "gradient" : "subtle"}
+            gradient={pathname === "/about" ? { from: "blue", to: "cyan", deg: 90 } : undefined}
+            size="lg"
+            radius="xl"
+            fw={500}
+            styles={{
+              root: {
+                transition: "all 0.3s ease",
+              },
+            }}
+          >
+            About
+          </Button>
         </Group>
 
         {/* User Menu or Login */}
@@ -136,11 +165,11 @@ function Header() {
               <UnstyledButton style={{ cursor: "pointer" }}>
                 <Group gap="md">
                   <Box ta="right">
-                    <Text fw={600} size="sm" c="dark">
-                      {session.user.fullName || session.user.username}
+                    <Text fw={600} size="lg" c="dark">
+                      {session.user.fullName || "User"}
                     </Text>
                     <Badge
-                      size="md"
+                      size="lg"
                       variant="light"
                       color="green"
                       onClick={handleTopUp}
@@ -154,7 +183,7 @@ function Header() {
                     color="blue"
                     size="lg"
                   >
-                    {session.user.username?.[0]?.toUpperCase() || 'U'}
+                    {session.user.fullName?.[0]?.toUpperCase() || 'U'}
                   </Avatar>
                 </Group>
               </UnstyledButton>
@@ -210,7 +239,15 @@ function Header() {
             </Menu.Dropdown>
           </Menu>
         ) : (
-          <Button component={Link} href="/auth/login" size="md" radius="lg">
+          <Button 
+            component={Link} 
+            href="/auth/login" 
+            size="sm" 
+            radius="xl"
+            variant="gradient"
+            gradient={{ from: "blue", to: "cyan", deg: 90 }}
+            fw={500}
+          >
             Login
           </Button>
         )}
