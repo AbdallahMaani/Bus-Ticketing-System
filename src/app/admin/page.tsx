@@ -77,7 +77,7 @@ export default function AdminPage() {
               boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
             }}
           >
-            <Tabs defaultValue="users" color="orange">
+            <Tabs defaultValue="users" color="blue" variant="pills" radius="md">
               <Tabs.List grow>
                 <Tabs.Tab value="users" leftSection={<IconUsers size={20} />} fw={600} size="lg">Users</Tabs.Tab>
                 <Tabs.Tab value="bookings" leftSection={<IconTicket size={20} />} fw={600} size="lg">Bookings</Tabs.Tab>

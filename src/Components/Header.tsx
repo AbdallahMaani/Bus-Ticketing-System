@@ -242,7 +242,7 @@ function Header() {
           <Button 
             component={Link} 
             href="/auth/login" 
-            size="sm" 
+            size="lg" 
             radius="xl"
             variant="gradient"
             gradient={{ from: "blue", to: "cyan", deg: 90 }}

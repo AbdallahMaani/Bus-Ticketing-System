@@ -111,7 +111,7 @@ function TicketItem({trip,balance,onShowOnMap,onBook }: {trip: Trip;balance: num
               <Group gap="xs" mt="4px">
                 <Group gap="4px">
                   <IconClock size={14} color="#6b7280" />
-                  <Text size="sm" c="dimmed" fw={500}>
+                  <Text size="md" c="dimmed" fw={500}>
                     {trip.departure_date} at {trip.departure_time}
                   </Text>
                 </Group>
@@ -121,7 +121,7 @@ function TicketItem({trip,balance,onShowOnMap,onBook }: {trip: Trip;balance: num
         </Box>
         
         <Box ta="right">
-          <Text size="xs" c="dimmed" fw={500} mb="4px">Price</Text>
+          <Text size="lg" c="dimmed" fw={500} mb="4px">Price</Text>
           <Badge 
             size="xl"
             variant="gradient" 
@@ -139,14 +139,14 @@ function TicketItem({trip,balance,onShowOnMap,onBook }: {trip: Trip;balance: num
           <div>
             <Group gap="4px" mb="4px">
               <IconUsers size={16} color="#6b7280" />
-              <Text size="sm" fw={500}>
+              <Text size="lg" fw={500}>
                 {trip.available_seats} seats available
               </Text>
             </Group>
             <Badge 
               color={trip.status === "Scheduled" ? "green" : trip.status === "Cancelled" ? "red" : "yellow"} 
               variant="light" 
-              size="md"
+              size="lg"
               fw={600}
             >
               {trip.status}
@@ -223,7 +223,7 @@ function TicketItem({trip,balance,onShowOnMap,onBook }: {trip: Trip;balance: num
                 >
                   <Group gap="xs" mb="4px">
                     <IconMapPin size={16} color="#3b82f6" />
-                    <Text size="xs" c="dimmed" fw={500}>
+                    <Text size="md" c="dimmed" fw={500}>
                       Departure City
                     </Text>
                   </Group>
@@ -243,7 +243,7 @@ function TicketItem({trip,balance,onShowOnMap,onBook }: {trip: Trip;balance: num
                 >
                   <Group gap="xs" mb="4px">
                     <IconMapPin size={16} color="#22c55e" />
-                    <Text size="xs" c="dimmed" fw={500}>
+                    <Text size="md" c="dimmed" fw={500}>
                       Destination City
                     </Text>
                   </Group>
@@ -254,7 +254,7 @@ function TicketItem({trip,balance,onShowOnMap,onBook }: {trip: Trip;balance: num
               </Grid.Col>
               <Grid.Col span={{ base: 12, sm: 6 }}>
                 <Box p="sm" style={{ borderRadius: "10px", background: "rgba(59, 130, 246, 0.05)", border: "1px solid rgba(59, 130, 246, 0.1)" }}>
-                  <Text size="xs" c="dimmed" fw={500} mb="4px">
+                  <Text size="md" c="dimmed" fw={500} mb="4px">
                     Departure Station
                   </Text>
                   <Text size="sm" fw={700}>
@@ -267,7 +267,7 @@ function TicketItem({trip,balance,onShowOnMap,onBook }: {trip: Trip;balance: num
               </Grid.Col>
               <Grid.Col span={{ base: 12, sm: 6 }}>
                 <Box p="sm" style={{ borderRadius: "10px", background: "rgba(34, 197, 94, 0.05)", border: "1px solid rgba(34, 197, 94, 0.1)" }}>
-                  <Text size="xs" c="dimmed" fw={500} mb="4px">
+                  <Text size="md" c="dimmed" fw={500} mb="4px">
                     Destination Station
                   </Text>
                   <Text size="sm" fw={700}>
@@ -280,20 +280,20 @@ function TicketItem({trip,balance,onShowOnMap,onBook }: {trip: Trip;balance: num
               </Grid.Col>
               <Grid.Col span={{ base: 12, sm: 6 }}>
                 <Box p="sm" style={{ borderRadius: "10px", background: "rgba(59, 130, 246, 0.05)", border: "1px solid rgba(59, 130, 246, 0.1)" }}>
-                  <Text size="xs" c="dimmed" fw={500} mb="4px">
+                  <Text size="md" c="dimmed" fw={500} mb="4px">
                     Departure Street
                   </Text>
-                  <Text size="sm" fw={700}>
+                  <Text size="md" fw={700}>
                     {trip.origin_street}
                   </Text>
                 </Box>
               </Grid.Col>
               <Grid.Col span={{ base: 12, sm: 6 }}>
                 <Box p="sm" style={{ borderRadius: "10px", background: "rgba(34, 197, 94, 0.05)", border: "1px solid rgba(34, 197, 94, 0.1)" }}>
-                  <Text size="xs" c="dimmed" fw={500} mb="4px">
+                  <Text size="md" c="dimmed" fw={500} mb="4px">
                     Destination Street
                   </Text>
-                  <Text size="sm" fw={700}>
+                  <Text size="md" fw={700}>
                     {trip.destination_street}
                   </Text>
                 </Box>
@@ -302,11 +302,11 @@ function TicketItem({trip,balance,onShowOnMap,onBook }: {trip: Trip;balance: num
                 <Box p="sm" style={{ borderRadius: "10px", background: "rgba(168, 85, 247, 0.05)", border: "1px solid rgba(168, 85, 247, 0.1)" }}>
                   <Group gap="xs" mb="4px">
                     <IconBus size={16} color="#a855f7" />
-                    <Text size="xs" c="dimmed" fw={500}>
+                    <Text size="md" c="dimmed" fw={500}>
                       Bus Type
                     </Text>
                   </Group>
-                  <Text size="sm" fw={700}>
+                  <Text size="md" fw={700}>
                     {trip.bus_type}
                   </Text>
                 </Box>
@@ -315,11 +315,11 @@ function TicketItem({trip,balance,onShowOnMap,onBook }: {trip: Trip;balance: num
                 <Box p="sm" style={{ borderRadius: "10px", background: "rgba(249, 115, 22, 0.05)", border: "1px solid rgba(249, 115, 22, 0.1)" }}>
                   <Group gap="xs" mb="4px">
                     <IconUser size={16} color="#f97316" />
-                    <Text size="xs" c="dimmed" fw={500}>
+                    <Text size="md" c="dimmed" fw={500}>
                       Driver
                     </Text>
                   </Group>
-                  <Text size="sm" fw={700}>
+                  <Text size="md" fw={700}>
                     {trip.driver_name}
                   </Text>
                 </Box>
