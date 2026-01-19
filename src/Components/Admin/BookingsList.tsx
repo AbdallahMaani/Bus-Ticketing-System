@@ -38,7 +38,7 @@ export default function BookingsTable() {
   const [loading, setLoading] = useState(true);
   const [statusChangeModal, setStatusChangeModal] = useState<{ open: boolean; id?: string; currentStatus?: string; newStatus?: string }>({ open: false });
   const [userMap, setUserMap] = useState<Record<string, string>>({});
-  const [quantityModal, setQuantityModal] = useState<{ open: boolean; id?: string; quantity?: number; priceTotal?: number; tripPrice?: number }>({ open: false });
+  const [quantityModal, setQuantityModal] = useState<{ open: boolean; id?: string; quantity?: number }>({ open: false });
   const [tripPriceMap, setTripPriceMap] = useState<Record<string, number>>({});
   const [confirmDelete, setConfirmDelete] = useState<{ open: boolean; id?: string }>({ open: false });
 
@@ -110,54 +110,50 @@ export default function BookingsTable() {
 
   const updateBookingStatus = async (bookingId?: string, newStatus?: string) => {
     if (!bookingId || !newStatus) return;
+
     try {
-      if (newStatus === "Cancelled") {
-        const res = await apiClientFetch(`/api/Booking/${bookingId}`, {
-          method: "DELETE",
-        });
-        if (!res.ok) {
-          const txt = await res.text();
-          throw new Error(txt || "Cancellation failed");
-        }
-        notifications.show({ title: "Booking", message: "Booking cancelled and refunded", color: "green" });
-        setConfirmDelete({ open: false });
-      } else {
-        const res = await apiClientFetch(`/api/Booking/${bookingId}`, {
-          method: "PUT",
-          body: JSON.stringify({
-            bookingId,
-            bookingStatus: newStatus,
-          }),
-        });
-        if (!res.ok) {
-          const txt = await res.text();
-          throw new Error(txt || "Update failed");
-        }
-        notifications.show({ title: "Booking", message: `Status changed to ${newStatus}`, color: "green" });
-        setStatusChangeModal({ open: false });
+      const res = await apiClientFetch(`/api/Booking/${bookingId}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || 'Failed to update status');
       }
+
+      notifications.show({
+        title: 'Booking Status Updated',
+        message: `Booking status has been successfully changed to ${newStatus}.`,
+        color: 'green',
+      });
+
+      setStatusChangeModal({ open: false });
+      setConfirmDelete({ open: false });
       await fetchBookings();
     } catch (err: any) {
-      notifications.show({ title: "Booking", message: err.message || "Update failed", color: "red" });
+      notifications.show({
+        title: 'Update Error',
+        message: err.message || 'An unknown error occurred.',
+        color: 'red',
+      });
     }
   };
 
-  const updateBookingQuantity = async (bookingId?: string, newQuantity?: number, newPriceTotal?: number) => {
-    if (!bookingId || newQuantity === undefined || newPriceTotal === undefined) return;
+  const updateBookingQuantity = async (bookingId?: string, newQuantity?: number) => {
+    if (!bookingId || newQuantity === undefined) return;
     try {
-      const res = await apiClientFetch(`/api/Booking/${bookingId}`, {
+      const res = await apiClientFetch(`/api/Booking/${bookingId}/quantity`, {
         method: "PUT",
         body: JSON.stringify({
-          bookingId,
-          quantity: newQuantity,
-          priceTotal: newPriceTotal,
+          quantity: newQuantity
         }),
       });
       if (!res.ok) {
         const txt = await res.text();
         throw new Error(txt || "Update failed");
       }
-      notifications.show({ title: "Booking", message: `Quantity and price updated`, color: "green" });
+      notifications.show({ title: "Booking", message: `Quantity updated successfully`, color: "green" });
       setQuantityModal({ open: false });
       await fetchBookings();
     } catch (err: any) {
@@ -214,9 +210,8 @@ export default function BookingsTable() {
                       color="orange"
                       variant="light"
                       size="lg"
-                      onClick={async () => {
-                        const tripPrice = await fetchTripPrice(b.tripId);
-                        setQuantityModal({ open: true, id: b.bookingId, quantity: b.quantity, priceTotal: b.priceTotal, tripPrice });
+                      onClick={() => {
+                        setQuantityModal({ open: true, id: b.bookingId, quantity: b.quantity });
                       }}
                       title="Edit Quantity"
                     >
@@ -226,7 +221,7 @@ export default function BookingsTable() {
                       color="blue"
                       variant="light"
                       size="lg"
-                      onClick={() => setStatusChangeModal({ open: true, id: b.bookingId, currentStatus: b.bookingStatus })}
+                      onClick={() => setStatusChangeModal({ open: true, id: b.bookingId, currentStatus: b.bookingStatus, newStatus: b.bookingStatus })}
                       title="Change Status"
                     >
                       <IconRefresh size={18} />
@@ -266,10 +261,17 @@ export default function BookingsTable() {
           />
           <Group justify="flex-end" gap="md">
             <Button variant="light" onClick={() => setStatusChangeModal({ open: false })} fw={600} size="md">Cancel</Button>
-            <Button 
+            <Button
               variant="gradient"
-              gradient={{ from: "#0685d9ff", to: "#0b8cf5ff", deg: 90 }}
-              onClick={() => updateBookingStatus(statusChangeModal.id, statusChangeModal.newStatus)}
+              gradient={{ from: '#0685d9ff', to: '#0b8cf5ff', deg: 90 }}
+              onClick={() => {
+                if (statusChangeModal.newStatus === 'Cancelled') {
+                  setConfirmDelete({ open: true, id: statusChangeModal.id });
+                  setStatusChangeModal({ open: false });
+                } else {
+                  updateBookingStatus(statusChangeModal.id, statusChangeModal.newStatus);
+                }
+              }}
               disabled={!statusChangeModal.newStatus || statusChangeModal.newStatus === statusChangeModal.currentStatus}
               fw={700}
               size="md"
@@ -280,9 +282,8 @@ export default function BookingsTable() {
         </Stack>
       </Modal>
 
-      <Modal opened={quantityModal.open} onClose={() => setQuantityModal({ open: false })} title="Edit Quantity and Price" radius="lg" centered>
+      <Modal opened={quantityModal.open} onClose={() => setQuantityModal({ open: false })} title="Edit Quantity" radius="lg" centered>
         <Stack gap="md">
-          <Text size="lg" fw={600}>Trip Price (per seat): <Text span fw={700} c="#0685d9ff">{quantityModal.tripPrice?.toFixed(2)} JOD</Text></Text>
           <TextInput
             label="Quantity"
             type="number"
@@ -290,26 +291,17 @@ export default function BookingsTable() {
             value={quantityModal.quantity || ""}
             onChange={(e) => {
               const qty = parseInt(e.currentTarget.value) || 0;
-              const newPrice = qty * (quantityModal.tripPrice || 0);
-              setQuantityModal((prev) => ({ ...prev, quantity: qty, priceTotal: newPrice }));
+              setQuantityModal((prev) => ({ ...prev, quantity: qty }));
             }}
             size="md"
             fw={600}
-          />
-          <TextInput
-            label="Total Price (JOD)"
-            type="number"
-            value={quantityModal.priceTotal?.toFixed(2) || ""}
-            disabled
-            readOnly
-            size="md"
           />
           <Group justify="flex-end" gap="md">
             <Button variant="light" onClick={() => setQuantityModal({ open: false })} fw={600} size="md">Cancel</Button>
             <Button 
               variant="gradient"
               gradient={{ from: "#22c55e", to: "#16a34a", deg: 90 }}
-              onClick={() => updateBookingQuantity(quantityModal.id, quantityModal.quantity, quantityModal.priceTotal)}
+              onClick={() => updateBookingQuantity(quantityModal.id, quantityModal.quantity)}
               disabled={!quantityModal.quantity || quantityModal.quantity <= 0}
               fw={700}
               size="md"

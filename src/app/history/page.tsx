@@ -37,6 +37,7 @@ import {
   IconMapPin,
   IconClock,
   IconX,
+  IconCheck,
 } from "@tabler/icons-react";
 
 interface Booking {
@@ -57,7 +58,7 @@ export default function HistoryPage() {
   const { data: session, status } = useSession();
   const [tickets, setTickets] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
-  const [canceling, setCanceling] = useState<Record<string, boolean>>({});
+  const [updatingStatus, setUpdatingStatus] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (status === "loading") return;
@@ -99,12 +100,13 @@ export default function HistoryPage() {
     fetchBookings();
   }, [status]);
 
-  const handleCancel = async (bookingId: string) => {
-    setCanceling(prev => ({ ...prev, [bookingId]: true }));
+  const handleUpdateStatus = async (bookingId: string, newStatus: 'Confirmed' | 'Cancelled') => {
+    setUpdatingStatus(prev => ({ ...prev, [bookingId]: true }));
 
     try {
-      const res = await apiClientFetch(`/api/Booking/${bookingId}`, {
-        method: 'DELETE',
+      const res = await apiClientFetch(`/api/Booking/${bookingId}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: newStatus }),
       });
 
       if (res.status === 401) {
@@ -112,43 +114,34 @@ export default function HistoryPage() {
         return;
       }
 
-      if (res.status === 403) {
-        notifications.show({
-          title: 'Error',
-          message: 'You do not have permission to cancel this booking',
-          color: 'red',
-        });
-        return;
-      }
-
       if (!res.ok) {
         const text = await res.text();
-        throw new Error(text || 'Failed to cancel booking');
+        throw new Error(text || `Failed to change status to ${newStatus}`);
       }
 
       // Success: update local state
       setTickets(prev =>
         prev.map(ticket =>
           ticket.bookingId === bookingId
-            ? { ...ticket, bookingStatus: 'Cancelled' }
+            ? { ...ticket, bookingStatus: newStatus }
             : ticket
         )
       );
 
       notifications.show({
         title: 'Success',
-        message: 'Booking cancelled successfully',
+        message: `Booking successfully ${newStatus.toLowerCase()}.`,
         color: 'green',
       });
     } catch (error: any) {
-      console.error('Error cancelling booking:', error);
+      console.error(`Error updating status for booking ${bookingId}:`, error);
       notifications.show({
-        title: 'Error',
-        message: error.message || 'Failed to cancel booking',
+        title: 'Update Failed',
+        message: error.message || 'An unexpected error occurred.',
         color: 'red',
       });
     } finally {
-      setCanceling(prev => ({ ...prev, [bookingId]: false }));
+      setUpdatingStatus(prev => ({ ...prev, [bookingId]: false }));
     }
   };
 
@@ -207,73 +200,105 @@ export default function HistoryPage() {
   );
   const lastTrip = tickets.length ? new Date(tickets[0].bookingDate).toLocaleDateString() : "-";
 
-  const rows = tickets.map((ticket) => (
-    <Table.Tr key={ticket.bookingId} style={{ borderBottom: "1px solid rgba(217, 119, 6, 0.1)" }}>
-      <Table.Td>
-        <Group gap="sm">
-          <ThemeIcon color="blue" variant="light" size="lg" radius="md">
-            <IconMapPin size={18} stroke={2} />
-          </ThemeIcon>
-          <div>
-            <Text fw={600} size="sm" c="#0685d9ff">
-              {ticket.originName} → {ticket.destinationName}
-            </Text>
-            <Text size="xs" c="dimmed">ID: {ticket.bookingId.substring(0, 12)}...</Text>
-          </div>
-        </Group>
-      </Table.Td>
-      <Table.Td>
-        <Group gap="xs">
-          <ThemeIcon color="orange" variant="light" size="md" radius="md">
-            <IconClock size={14} stroke={2} />
-          </ThemeIcon>
-          <div>
-            <Text fw={500} size="sm">{new Date(ticket.bookingDate).toLocaleDateString()}</Text>
-            <Text size="xs" c="dimmed">
-              {new Date(ticket.bookingDate).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </Text>
-          </div>
-        </Group>
-      </Table.Td>
-      <Table.Td ta="right">
-        <Text fw={500} size="sm">{(ticket.priceTotal / ticket.quantity).toFixed(2)} JOD</Text>
-      </Table.Td>
-      <Table.Td ta="center">
-        <Badge color="gray" variant="light" size="md">{ticket.quantity}</Badge>
-      </Table.Td>
-      <Table.Td ta="right">
-        <Text fw={700} c="#0685d9ff" size="md">{ticket.priceTotal.toFixed(2)} JOD</Text>
-      </Table.Td>
-      <Table.Td ta="center">
-        <Badge
-          color={ticket.bookingStatus === "Confirmed" ? "green" : "red"}
-          variant="light"
-          radius="md"
-          size="lg"
-          fw={600}
-        >
-          {ticket.bookingStatus}
-        </Badge>
-      </Table.Td>
-      <Table.Td ta="center">
+  const rows = tickets.map((ticket) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Compare dates only
+    const tripDate = new Date(ticket.bookingDate);
+    tripDate.setHours(0, 0, 0, 0);
+    const isPastTrip = tripDate < today;
+
+    let actionButton;
+    if (isPastTrip) {
+      actionButton = <Text size="sm" c="dimmed">Expired</Text>;
+    } else if (ticket.bookingStatus === 'Confirmed') {
+      actionButton = (
         <Button
           size="sm"
           color="red"
           variant="light"
-          disabled={ticket.bookingStatus !== 'Confirmed'}
-          onClick={() => handleCancel(ticket.bookingId)}
-          loading={Boolean(canceling[ticket.bookingId])}
+          onClick={() => handleUpdateStatus(ticket.bookingId, 'Cancelled')}
+          loading={Boolean(updatingStatus[ticket.bookingId])}
           leftSection={<IconX size={14} />}
           fw={600}
         >
           Cancel
         </Button>
-      </Table.Td>
-    </Table.Tr>
-  ));
+      );
+    } else if (ticket.bookingStatus === 'Cancelled') {
+      actionButton = (
+        <Button
+          size="sm"
+          color="green"
+          variant="light"
+          onClick={() => handleUpdateStatus(ticket.bookingId, 'Confirmed')}
+          loading={Boolean(updatingStatus[ticket.bookingId])}
+          leftSection={<IconCheck size={14} />}
+          fw={600}
+        >
+          Re-activate
+        </Button>
+      );
+    } else {
+      actionButton = null; // No action for other statuses
+    }
+
+    return (
+      <Table.Tr key={ticket.bookingId} style={{ borderBottom: "1px solid rgba(217, 119, 6, 0.1)" }}>
+        <Table.Td>
+          <Group gap="sm">
+            <ThemeIcon color="blue" variant="light" size="lg" radius="md">
+              <IconMapPin size={18} stroke={2} />
+            </ThemeIcon>
+            <div>
+              <Text fw={600} size="sm" c="#0685d9ff">
+                {ticket.originName} → {ticket.destinationName}
+              </Text>
+              <Text size="xs" c="dimmed">ID: {ticket.bookingId.substring(0, 12)}...</Text>
+            </div>
+          </Group>
+        </Table.Td>
+        <Table.Td>
+          <Group gap="xs">
+            <ThemeIcon color="orange" variant="light" size="md" radius="md">
+              <IconClock size={14} stroke={2} />
+            </ThemeIcon>
+            <div>
+              <Text fw={500} size="sm">{new Date(ticket.bookingDate).toLocaleDateString()}</Text>
+              <Text size="xs" c="dimmed">
+                {new Date(ticket.bookingDate).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </Text>
+            </div>
+          </Group>
+        </Table.Td>
+        <Table.Td ta="right">
+          <Text fw={500} size="sm">{(ticket.priceTotal / ticket.quantity).toFixed(2)} JOD</Text>
+        </Table.Td>
+        <Table.Td ta="center">
+          <Badge color="gray" variant="light" size="md">{ticket.quantity}</Badge>
+        </Table.Td>
+        <Table.Td ta="right">
+          <Text fw={700} c="#0685d9ff" size="md">{ticket.priceTotal.toFixed(2)} JOD</Text>
+        </Table.Td>
+        <Table.Td ta="center">
+          <Badge
+            color={ticket.bookingStatus === "Confirmed" ? "green" : "red"}
+            variant="light"
+            radius="md"
+            size="lg"
+            fw={600}
+          >
+            {ticket.bookingStatus}
+          </Badge>
+        </Table.Td>
+        <Table.Td ta="center">
+          {actionButton}
+        </Table.Td>
+      </Table.Tr>
+    );
+  });
 
   return (
     <Box style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>

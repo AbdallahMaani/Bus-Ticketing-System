@@ -90,7 +90,7 @@ export default function LoginPage() {
           alignItems: "center",
         }}
       >
-        <Container size={420}>
+        <Container size={520}>
           <SignUp onToggle={() => setShowSignUp(false)} onSignUpSuccess={() => {
             setShowSignUp(false);
             setError('');
@@ -109,7 +109,7 @@ export default function LoginPage() {
         alignItems: "center",
       }}
     >
-      <Container size={420}>
+      <Container size={520}>
         <Stack gap={0} align="center" mb={40}>
           <ThemeIcon 
             size={80} 
